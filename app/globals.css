@@ -1,21 +1,148 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+@import '@aws-amplify/ui-react/styles.css';
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+	:root {
+		--background: 0 0% 3.9%;
+		--foreground: 0 0% 98%;
+		--card: 0 0% 3.9%;
+		--card-foreground: 0 0% 98%;
+		--popover: 0 0% 3.9%;
+		--popover-foreground: 0 0% 98%;
+		--primary: 0 0% 98%;
+		--primary-foreground: 0 0% 9%;
+		--secondary: 0 0% 14.9%;
+		--secondary-foreground: 0 0% 98%;
+		--muted: 0 0% 14.9%;
+		--muted-foreground: 0 0% 63.9%;
+		--accent: 0 0% 14.9%;
+		--accent-foreground: 0 0% 98%;
+		--destructive: 0 62.8% 30.6%;
+		--destructive-foreground: 0 0% 98%;
+		--border: 0 0% 14.9%;
+		--input: 0 0% 14.9%;
+		--ring: 0 0% 83.1%;
+		--chart-1: 220 70% 50%;
+		--chart-2: 160 60% 45%;
+		--chart-3: 30 80% 55%;
+		--chart-4: 280 65% 60%;
+		--chart-5: 340 75% 55%;
+		--radius: 0.5rem;
+	}
+}
+
+@layer base {
+	* {
+		@apply border-border;
+	}
+	body {
+		@apply bg-background text-foreground;
+	}
+}
+
+html {
+	scroll-behavior: smooth;
+	scroll-padding-top: 4rem; /* accounts for fixed navbar */
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+}
+
+[data-amplify-authenticator] {
+	--amplify-components-authenticator-router-box-shadow: none;
+	--amplify-components-authenticator-router-border-width: 0;
+	--amplify-components-authenticator-form-padding: var(--amplify-space-xl);
+	--amplify-components-button-primary-background-color: rgb(52, 140, 235);
+	--amplify-components-button-primary-hover-background-color: rgb(126, 34, 206);
+	--amplify-components-fieldcontrol-focus-box-shadow: 0 0 0 2px
+		rgba(147, 51, 234, 0.2);
+	--amplify-components-tabs-item-active-border-color: rgb(147, 51, 234);
+	--amplify-components-tabs-item-color: #666;
+	--amplify-components-tabs-item-active-color: rgb(147, 51, 234);
+	--amplify-components-button-link-color: rgb(147, 51, 234);
+	--amplify-colors-background-primary: white;
+	--amplify-colors-background-secondary: #f9fafb;
+	--amplify-colors-font-interactive: rgb(51, 176, 234);
+	--amplify-components-fieldcontrol-border-width: 1px;
+	--amplify-components-fieldcontrol-border-color: #e5e7eb;
+	--amplify-components-fieldcontrol-border-radius: 6px;
+	--amplify-components-authenticator-state-inactive-background-color: transparent;
+}
+
+/* Center the authenticator container */
+[data-amplify-authenticator] [data-amplify-router] {
+	border-radius: 12px;
+	margin: 0 auto;
+	width: 100%;
+	max-width: 400px;
+	background-color: white;
+}
+
+/* Style the form container */
+[data-amplify-authenticator] [data-amplify-form] {
+	padding: var(--amplify-space-xl);
+	background-color: white;
+}
+
+/* Style the buttons */
+.amplify-button--primary {
+	background-color: rgb(147, 51, 234) !important;
+	transition: all 0.2s ease-in-out;
+	border: none;
+}
+
+.amplify-button--primary:hover {
+	background-color: rgb(126, 34, 206) !important;
+}
+
+/* Style the input fields */
+.amplify-field {
+	margin-bottom: var(--amplify-space-medium);
+}
+
+.amplify-field input {
+	border-color: #e5e7eb;
+	transition: all 0.2s ease-in-out;
+}
+
+.amplify-field input:focus {
+	border-color: rgb(147, 51, 234);
+	box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
+}
+
+/* Style the social buttons */
+[data-amplify-authenticator] [data-amplify-social-button] {
+	border-radius: 6px;
+	margin-bottom: var(--amplify-space-small);
+	border-color: #e5e7eb;
+}
+
+/* Style the tabs */
+[data-amplify-authenticator] [data-amplify-tabs] {
+	border-bottom-color: #e5e7eb;
+}
+
+[data-amplify-authenticator] [data-amplify-tabs-item] {
+	color: #666;
+	font-weight: 500;
+}
+
+[data-amplify-authenticator] [data-amplify-tabs-item][data-active] {
+	color: rgb(147, 51, 234);
+	border-color: rgb(147, 51, 234);
+}
+
+/* Style the divider */
+[data-amplify-authenticator] .amplify-divider-label {
+	color: #666;
+	background-color: white;
 }
