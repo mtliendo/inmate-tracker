@@ -24,13 +24,13 @@ function Pricing() {
 							your tracking needs.
 						</p>
 					</div>
-					<div className="grid pt-20 text-left grid-cols-1 lg:grid-cols-3 w-full gap-8">
-						<Card className="w-full rounded-lg border-gray-800 bg-gradient-to-b from-gray-900 to-gray-950 hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300">
+					<div className="grid pt-20 text-left grid-cols-1 lg:grid-cols-2 w-full gap-8">
+						<Card className="w-full rounded-lg bg-gradient-to-b from-gray-900 to-gray-950 border-gray-800 hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300">
 							<CardHeader>
 								<CardTitle>
 									<span className="flex flex-row gap-4 items-center font-normal">
-										<span className="bg-gradient-to-r from-gray-200 to-gray-100 bg-clip-text text-transparent">
-											Watchful Citizen
+										<span className="bg-gradient-to-r from-orange-200 to-purple-200 bg-clip-text text-transparent">
+											🛡️ Watchful Citizen
 										</span>
 									</span>
 								</CardTitle>
@@ -42,7 +42,7 @@ function Pricing() {
 								<div className="flex flex-col gap-8 justify-start">
 									<p className="flex flex-row items-center gap-2 text-xl">
 										<span className="text-4xl font-bold bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent">
-											$4.99
+											$5
 										</span>
 										<span className="text-sm text-gray-500">/ month</span>
 									</p>
@@ -73,7 +73,7 @@ function Pricing() {
 										className="gap-4 border-gray-800 hover:bg-gray-800 hover:text-gray-100 transition-all duration-300"
 										asChild
 									>
-										<a href="/pricing">
+										<a href="/my-account">
 											Get Started <MoveRight className="w-4 h-4" />
 										</a>
 									</Button>
@@ -86,19 +86,20 @@ function Pricing() {
 								<CardTitle>
 									<span className="flex flex-row gap-4 items-center font-normal">
 										<span className="bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">
-											Professional Monitor
+											⚓ Professional Monitor
 										</span>
 									</span>
 								</CardTitle>
 								<CardDescription className="text-gray-400">
-									Bail bondsmen, lawyers, journalists, employers
+									Perfect for Bail bondsmen, lawyers, journalists, employers,
+									landlords, and more
 								</CardDescription>
 							</CardHeader>
 							<CardContent className="relative z-10">
 								<div className="flex flex-col gap-8 justify-start">
 									<p className="flex flex-row items-center gap-2 text-xl">
 										<span className="text-4xl font-bold bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">
-											$14.99
+											$15
 										</span>
 										<span className="text-sm text-gray-500">/ month</span>
 									</p>
@@ -106,9 +107,9 @@ function Pricing() {
 										<div className="flex flex-row gap-4">
 											<Check className="w-4 h-4 mt-2 text-purple-400" />
 											<div className="flex flex-col">
-												<p className="text-gray-200">Track up to 25 names</p>
+												<p className="text-gray-200">Unlimited name tracking</p>
 												<p className="text-gray-500 text-sm">
-													Expanded tracking capacity
+													No limits on the number of names you can track
 												</p>
 											</div>
 										</div>
@@ -139,74 +140,8 @@ function Pricing() {
 										className="gap-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white border-0 transition-all duration-300 relative z-20"
 										asChild
 									>
-										<a href="/pricing">
+										<a href="/my-account">
 											Start Professional Plan <MoveRight className="w-4 h-4" />
-										</a>
-									</Button>
-								</div>
-							</CardContent>
-						</Card>
-						<Card className="w-full rounded-lg bg-gradient-to-b from-gray-900 to-gray-950 border-gray-800 hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300">
-							<CardHeader>
-								<CardTitle>
-									<span className="flex flex-row gap-4 items-center font-normal">
-										<span className="bg-gradient-to-r from-orange-200 to-purple-200 bg-clip-text text-transparent">
-											Enterprise Tracker
-										</span>
-									</span>
-								</CardTitle>
-								<CardDescription className="text-gray-400">
-									Law firms, landlords, security teams, government agencies
-								</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<div className="flex flex-col gap-8 justify-start">
-									<p className="flex flex-row items-center gap-2 text-xl">
-										<span className="text-4xl font-bold bg-gradient-to-r from-orange-200 to-purple-200 bg-clip-text text-transparent">
-											$29.99
-										</span>
-										<span className="text-sm text-gray-500">/ month</span>
-									</p>
-									<div className="flex flex-col gap-4 justify-start">
-										<div className="flex flex-row gap-4">
-											<Check className="w-4 h-4 mt-2 text-purple-400" />
-											<div className="flex flex-col">
-												<p className="text-gray-200">Unlimited name tracking</p>
-												<p className="text-gray-500 text-sm">
-													No limits on monitored individuals
-												</p>
-											</div>
-										</div>
-										<div className="flex flex-row gap-4">
-											<Check className="w-4 h-4 mt-2 text-purple-400" />
-											<div className="flex flex-col">
-												<p className="text-gray-200">
-													Filter by specific charges
-												</p>
-												<p className="text-gray-500 text-sm">
-													DUI, Assault, Theft, and more
-												</p>
-											</div>
-										</div>
-										<div className="flex flex-row gap-4">
-											<Check className="w-4 h-4 mt-2 text-purple-400" />
-											<div className="flex flex-col">
-												<p className="text-gray-200">
-													AI-generated arrest summaries
-												</p>
-												<p className="text-gray-500 text-sm">
-													Get detailed insights on arrests
-												</p>
-											</div>
-										</div>
-									</div>
-									<Button
-										variant="outline"
-										className="gap-4 border-gray-800 hover:bg-gray-800 hover:text-gray-100 transition-all duration-300"
-										asChild
-									>
-										<a href="/pricing">
-											Start Enterprise Plan <MoveRight className="w-4 h-4" />
 										</a>
 									</Button>
 								</div>

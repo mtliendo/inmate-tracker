@@ -9,10 +9,9 @@ export default function Home() {
 			<main>
 				<div className="relative" id="top">
 					<HeroSection
-						title="Scott County Inmate Alerts"
 						subtitle={{
 							regular: 'Stay informed with ',
-							gradient: 'real-time booking notifications',
+							gradient: 'Scott County Inmate Alerts',
 						}}
 						description="Never miss an update about inmates in Scott County, Iowa. Get instant alerts about bookings, releases, and status changes delivered straight to your phone or email. Perfect for families, legal professionals, and concerned citizens."
 						ctaText="Start Tracking Now"
@@ -24,7 +23,7 @@ export default function Home() {
 							angle: 65,
 							opacity: 0.4,
 							cellSize: 50,
-							darkLineColor: '#2a2a2a',
+							darkLineColor: '#fff',
 						}}
 					/>
 					{/* Smooth gradient transition to features */}

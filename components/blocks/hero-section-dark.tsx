@@ -1,7 +1,5 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
-import { ChevronRight } from 'lucide-react'
-
 interface HeroSectionProps extends React.HTMLAttributes<HTMLDivElement> {
 	title?: string
 	subtitle?: {
@@ -56,7 +54,6 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
 	(
 		{
 			className,
-			title = 'Inmate Alerts',
 			subtitle = {
 				regular: 'Stay informed with ',
 				gradient: 'real-time inmate tracking alerts.',
@@ -83,10 +80,6 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
 					<RetroGrid {...gridOptions} />
 					<div className="max-w-screen-xl z-10 mx-auto px-4 py-28 gap-12 md:px-8">
 						<div className="space-y-5 max-w-3xl leading-0 lg:leading-5 mx-auto text-center">
-							<h1 className="text-sm text-gray-400 group font-geist mx-auto px-5 py-2 bg-gradient-to-tr from-zinc-300/5 via-gray-400/5 to-transparent border-[2px] border-white/5 rounded-3xl w-fit">
-								{title}
-								<ChevronRight className="inline w-4 h-4 ml-2 group-hover:translate-x-1 duration-300" />
-							</h1>
 							<h2 className="text-4xl tracking-tighter font-geist bg-clip-text text-transparent mx-auto md:text-6xl bg-[linear-gradient(180deg,_#FFF_0%,_rgba(255,_255,_255,_0.00)_202.08%)]">
 								{subtitle.regular}
 								<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-orange-200">
@@ -110,6 +103,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
 						</div>
 						{bottomImage && (
 							<div className="mt-32 mx-10 relative z-10">
+								{/* eslint-disable-next-line @next/next/no-img-element */}
 								<img
 									src={bottomImage.dark}
 									className="w-full shadow-lg rounded-lg border border-gray-800"
