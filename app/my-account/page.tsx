@@ -4,24 +4,12 @@ import { withAuthenticator } from '@aws-amplify/ui-react'
 import { Schema } from '@/amplify/data/resource'
 import { generateClient } from 'aws-amplify/api'
 import { useAuthenticator } from '@aws-amplify/ui-react'
-import Script from 'next/script'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { PlusCircle, Trash2, CreditCard, LogOut } from 'lucide-react'
+import { PlusCircle, Trash2, CreditCard, Mail, Phone } from 'lucide-react'
+import { PLAN_LIMITS, PLAN_DETAILS } from '@/app/types/subscription'
 
 const client = generateClient<Schema>()
-
-declare module 'react' {
-	// eslint-disable-next-line @typescript-eslint/no-namespace
-	namespace JSX {
-		interface IntrinsicElements {
-			'stripe-pricing-table': React.DetailedHTMLProps<
-				React.HTMLAttributes<HTMLElement>,
-				HTMLElement
-			>
-		}
-	}
-}
 
 type NameInput = {
 	firstName: string
@@ -50,7 +38,7 @@ function NameFields({
 						onChange(index, { ...name, firstName: e.target.value })
 					}
 					placeholder="First Name"
-					className="w-full px-4 py-2 rounded bg-black/50 border border-white/10 focus:border-white/25 outline-none transition-colors placeholder-gray-500"
+					className="w-full px-4 py-2 rounded bg-black/50 border border-white/10 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all placeholder-gray-500"
 				/>
 			</div>
 			<div className="flex-1">
@@ -62,12 +50,12 @@ function NameFields({
 						onChange(index, { ...name, lastName: e.target.value })
 					}
 					placeholder="Last Name"
-					className="w-full px-4 py-2 rounded bg-black/50 border border-white/10 focus:border-white/25 outline-none transition-colors placeholder-gray-500"
+					className="w-full px-4 py-2 rounded bg-black/50 border border-white/10 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all placeholder-gray-500"
 				/>
 			</div>
 			<button
 				onClick={() => onDelete(index)}
-				className="p-2 text-white/70 hover:text-white transition-colors"
+				className="p-2 text-red-400 hover:text-red-300 transition-colors"
 				aria-label="Delete name"
 			>
 				<Trash2 className="h-5 w-5" />
@@ -77,7 +65,7 @@ function NameFields({
 }
 
 function MyAccountPage() {
-	const { user, signOut } = useAuthenticator((context) => [context.user])
+	const { user } = useAuthenticator((context) => [context.user])
 	const queryClient = useQueryClient()
 	const [names, setNames] = React.useState<NameInput[]>([])
 	const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false)
@@ -154,15 +142,15 @@ function MyAccountPage() {
 	})
 
 	// Mutation for getting billing portal session
-	const { mutate: getBillingSession } = useMutation({
+	const { mutate: getBillingPortal, isPending: isLoadingPortal } = useMutation({
 		mutationFn: async (customerId: string) => {
 			const response =
-				await client.mutations.createStripeCustomerBillingPortalSession({
+				await client.mutations.createStripeCustomerBillingSession({
 					customerId,
-					returnUrl: window.location.href,
+					returnUrl: `${window.location.origin}/my-account`,
 				})
 			if (!response.data) {
-				throw new Error('Failed to create billing session')
+				throw new Error('Failed to create billing portal session')
 			}
 			return response.data
 		},
@@ -174,6 +162,37 @@ function MyAccountPage() {
 		},
 	})
 
+	// Mutation for updating notification preferences
+	const { mutate: updateNotificationPreferences } = useMutation({
+		mutationFn: async (alertMethod: 'EMAIL' | 'TEXT' | 'EMAIL_AND_TEXT') => {
+			if (!userData?.[0]) throw new Error('No user found')
+
+			const response = await client.models.User.update({
+				id: userData[0].id,
+				inmateAlertPreferences: {
+					names: userData[0].inmateAlertPreferences.names,
+					charges: userData[0].inmateAlertPreferences.charges,
+					chargeTypeAlerts: userData[0].inmateAlertPreferences.chargeTypeAlerts,
+					hourlyAlertsEnabled:
+						userData[0].inmateAlertPreferences.hourlyAlertsEnabled,
+					alertMethod,
+				},
+			})
+
+			if (response.errors) {
+				throw new Error(response.errors[0].message)
+			}
+			return response.data
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['users'] })
+			toast.success('Notification preferences updated successfully')
+		},
+		onError: (error) => {
+			toast.error(`Failed to update notification preferences: ${error.message}`)
+		},
+	})
+
 	// If we have no users and haven't created one yet, create one
 	React.useEffect(() => {
 		if (userData && userData.length === 0 && !newUserData) {
@@ -182,8 +201,17 @@ function MyAccountPage() {
 	}, [userData, newUserData, createUser])
 
 	const handleAddName = () => {
-		if (names.length >= 10) {
-			toast.error('Maximum of 10 names allowed')
+		const currentPlan = userData?.[0]?.stripePriceId
+		const maxNames = currentPlan
+			? PLAN_DETAILS[currentPlan]?.maxNames
+			: PLAN_LIMITS.FREE
+
+		if (!currentPlan && names.length >= PLAN_LIMITS.FREE) {
+			toast.error('Please upgrade to add more names')
+			return
+		}
+		if (maxNames && names.length >= maxNames) {
+			toast.error(`Maximum of ${maxNames} names allowed on your current plan`)
 			return
 		}
 		setNames([...names, { firstName: '', lastName: '' }])
@@ -215,118 +243,285 @@ function MyAccountPage() {
 
 	if (isLoading) {
 		return (
-			<div className="container mx-auto p-4 flex justify-center items-center min-h-[60vh]">
-				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/50"></div>
+			<div className="min-h-screen bg-gradient-to-br from-black via-purple-900/20 to-black">
+				<div className="container mx-auto p-4 flex justify-center items-center min-h-[60vh]">
+					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500/50"></div>
+				</div>
 			</div>
 		)
 	}
 
 	if (error) {
 		return (
-			<div className="container mx-auto p-4 text-red-400">
-				Error: {(error as Error).message}
+			<div className="min-h-screen bg-gradient-to-br from-black via-purple-900/20 to-black">
+				<div className="container mx-auto p-4 text-red-400">
+					Error: {(error as Error).message}
+				</div>
 			</div>
 		)
 	}
 
 	const dbUser = userData?.[0]
-	const clientSecret = newUserData?.customerSession
 
 	// Handle different user states
-	if (clientSecret) {
-		return (
-			<div className="container mx-auto p-4">
-				<div className="mb-4">Stripe Pricing Table for new customer</div>
-				<Script async src="https://js.stripe.com/v3/pricing-table.js"></Script>
-				<stripe-pricing-table
-					pricing-table-id={process.env.NEXT_PUBLIC_STRIPE_PRICING_TABLE_ID}
-					publishable-key={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-					customer-session-client-secret={clientSecret}
-				></stripe-pricing-table>
-			</div>
-		)
-	}
 
 	if (dbUser?.status === 'inactive' && dbUser.stripeCustomerId) {
 		return (
-			<div className="container mx-auto p-4">
-				<div className="bg-black/50 backdrop-blur-sm rounded-lg p-8 text-center border border-white/10">
-					<h1 className="text-2xl font-bold mb-4">Subscription Inactive</h1>
-					<p className="mb-4 text-gray-400">
-						Your subscription is currently inactive. Click below to manage your
-						subscription.
-					</p>
-					<button
-						onClick={() => getBillingSession(dbUser.stripeCustomerId!)}
-						className="bg-black/50 hover:bg-black/70 border border-white/10 hover:border-white/25 text-white font-medium px-6 py-2 rounded transition-all"
-					>
-						Manage Subscription
-					</button>
+			<div className="min-h-screen bg-gradient-to-br from-black via-purple-900/20 to-black">
+				<div className="container mx-auto p-4">
+					<div className="bg-gradient-to-br from-black/50 via-purple-900/20 to-black/50 backdrop-blur-sm rounded-lg p-8 text-center border border-white/10">
+						<h1 className="text-2xl font-bold mb-4">Subscription Inactive</h1>
+						<p className="mb-4 text-gray-400">
+							Your subscription is currently inactive. Click below to manage
+							your subscription.
+						</p>
+						<button
+							onClick={() => getBillingPortal(dbUser.stripeCustomerId!)}
+							disabled={isLoadingPortal}
+							className="bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-600 hover:to-pink-600 text-white font-medium px-6 py-2 rounded transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+						>
+							{isLoadingPortal ? (
+								<>
+									<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+									Opening Portal...
+								</>
+							) : (
+								'Manage Subscription'
+							)}
+						</button>
+					</div>
 				</div>
 			</div>
 		)
 	}
 
 	return (
-		<div className="container mx-auto p-4">
-			<div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-				<h1 className="text-2xl font-bold text-white">My Account</h1>
-				<div className="flex flex-col md:flex-row gap-4">
-					<button
-						onClick={() =>
-							dbUser?.stripeCustomerId &&
-							getBillingSession(dbUser.stripeCustomerId)
-						}
-						className="bg-black/50 hover:bg-black/70 border border-white/10 hover:border-white/25 text-white px-6 py-2 rounded inline-flex items-center justify-center gap-2 transition-all"
-					>
-						<CreditCard className="h-5 w-5" />
-						Manage Billing
-					</button>
-					<button
-						onClick={() => signOut()}
-						className="bg-black/50 hover:bg-black/70 border border-white/10 hover:border-white/25 text-white px-6 py-2 rounded inline-flex items-center justify-center gap-2 transition-all"
-					>
-						<LogOut className="h-5 w-5" />
-						Sign Out
-					</button>
-				</div>
-			</div>
-
-			<div className="bg-black/50 backdrop-blur-sm rounded-lg p-6 border border-white/10">
-				<div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-					<h2 className="text-xl font-semibold text-white">Alert Names</h2>
-					<button
-						onClick={handleAddName}
-						disabled={names.length >= 10}
-						className="bg-black/50 hover:bg-black/70 disabled:opacity-50 disabled:cursor-not-allowed border border-white/10 hover:border-white/25 text-white px-6 py-2 rounded inline-flex items-center justify-center gap-2 transition-all"
-					>
-						<PlusCircle className="h-5 w-5" />
-						Add Name
-					</button>
-				</div>
-
-				<div className="space-y-4">
-					{names.map((name, index) => (
-						<NameFields
-							key={index}
-							name={name}
-							index={index}
-							onDelete={handleDeleteName}
-							onChange={handleNameChange}
-						/>
-					))}
-				</div>
-
-				{hasUnsavedChanges && (
-					<div className="mt-6 flex justify-end">
-						<button
-							onClick={handleSaveNames}
-							className="bg-black/50 hover:bg-black/70 border border-white/10 hover:border-white/25 text-white px-6 py-2 rounded transition-all"
-						>
-							Save Changes
-						</button>
+		<div className="min-h-screen bg-gradient-to-br from-black via-purple-900/20 to-black">
+			<div className="container mx-auto p-4">
+				<div className="max-w-3xl mx-auto">
+					<div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+						<h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70">
+							My Account
+						</h1>
+						<div className="flex flex-col md:flex-row gap-4">
+							<button
+								onClick={() => {
+									if (!dbUser?.stripePriceId || dbUser?.status !== 'paid') {
+										window.location.href = '/pricing'
+									} else if (dbUser?.stripeCustomerId) {
+										getBillingPortal(dbUser.stripeCustomerId)
+									}
+								}}
+								disabled={isLoadingPortal}
+								className="bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-2 rounded inline-flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+							>
+								{isLoadingPortal ? (
+									<>
+										<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+										Opening Portal...
+									</>
+								) : (
+									<>
+										<CreditCard className="h-5 w-5" />
+										{!dbUser?.stripePriceId || dbUser?.status !== 'paid'
+											? 'Upgrade'
+											: 'Manage Billing'}
+									</>
+								)}
+							</button>
+						</div>
 					</div>
-				)}
+
+					{/* Current Plan Info */}
+					{dbUser?.stripePriceId && (
+						<div className="bg-gradient-to-br from-black/50 via-purple-900/10 to-black/50 backdrop-blur-sm rounded-lg p-6 border border-white/10 mb-6">
+							<h2 className="text-lg font-semibold mb-2">Current Plan</h2>
+							<div className="text-gray-400">
+								<p className="mb-2">
+									{PLAN_DETAILS[dbUser.stripePriceId]?.name || 'Free Plan'}
+								</p>
+								<ul className="list-disc list-inside space-y-1">
+									{PLAN_DETAILS[dbUser.stripePriceId]?.features.map(
+										(feature, index) => (
+											<li key={index}>{feature}</li>
+										)
+									)}
+								</ul>
+							</div>
+						</div>
+					)}
+
+					{/* Notification Preferences Section */}
+					<div className="bg-gradient-to-br from-black/50 via-purple-900/10 to-black/50 backdrop-blur-sm rounded-lg p-6 border border-white/10 mb-6">
+						<div className="flex flex-col gap-4">
+							<div>
+								<h2 className="text-lg font-semibold mb-2">
+									Notification Preferences
+								</h2>
+								<p className="text-sm text-gray-400 mb-4">
+									Choose how you want to receive alerts about inmate updates.
+								</p>
+							</div>
+
+							<div className="space-y-4">
+								<div className="flex flex-col gap-2">
+									<p className="text-sm font-medium text-gray-300">
+										Contact Information
+									</p>
+									<div className="flex flex-col gap-3 text-sm text-gray-400">
+										<div className="flex items-center gap-2">
+											<Mail className="h-4 w-4" />
+											<span>{dbUser?.email}</span>
+										</div>
+										{dbUser?.status === 'paid' && dbUser?.phone && (
+											<div className="flex items-center gap-2">
+												<Phone className="h-4 w-4" />
+												<span>{dbUser.phone}</span>
+											</div>
+										)}
+									</div>
+								</div>
+
+								<div className="flex flex-col gap-2">
+									<p className="text-sm font-medium text-gray-300">
+										Alert Method
+									</p>
+									<div className="flex flex-col gap-3">
+										{dbUser?.status === 'paid' ? (
+											<>
+												<label className="flex items-center gap-3">
+													<input
+														type="radio"
+														name="alertMethod"
+														value="EMAIL"
+														checked={
+															dbUser.inmateAlertPreferences?.alertMethod ===
+															'EMAIL'
+														}
+														onChange={() => {
+															if (!dbUser) return
+															updateNotificationPreferences('EMAIL')
+														}}
+														className="h-4 w-4 text-purple-500 border-gray-600 bg-black/50 focus:ring-purple-500/20"
+													/>
+													<span className="text-sm text-gray-300">
+														Email only
+													</span>
+												</label>
+												<label className="flex items-center gap-3">
+													<input
+														type="radio"
+														name="alertMethod"
+														value="TEXT"
+														checked={
+															dbUser.inmateAlertPreferences?.alertMethod ===
+															'TEXT'
+														}
+														onChange={() => {
+															if (!dbUser) return
+															updateNotificationPreferences('TEXT')
+														}}
+														className="h-4 w-4 text-purple-500 border-gray-600 bg-black/50 focus:ring-purple-500/20"
+													/>
+													<span className="text-sm text-gray-300">
+														Text message only
+													</span>
+												</label>
+												<label className="flex items-center gap-3">
+													<input
+														type="radio"
+														name="alertMethod"
+														value="EMAIL_AND_TEXT"
+														checked={
+															dbUser.inmateAlertPreferences?.alertMethod ===
+															'EMAIL_AND_TEXT'
+														}
+														onChange={() => {
+															if (!dbUser) return
+															updateNotificationPreferences('EMAIL_AND_TEXT')
+														}}
+														className="h-4 w-4 text-purple-500 border-gray-600 bg-black/50 focus:ring-purple-500/20"
+													/>
+													<span className="text-sm text-gray-300">
+														Both email and text message
+													</span>
+												</label>
+											</>
+										) : (
+											<div className="flex flex-col gap-2">
+												<div className="flex items-center gap-3">
+													<input
+														type="radio"
+														name="alertMethod"
+														value="EMAIL"
+														checked={true}
+														disabled
+														className="h-4 w-4 text-purple-500 border-gray-600 bg-black/50 focus:ring-purple-500/20"
+													/>
+													<span className="text-sm text-gray-300">
+														Email only
+													</span>
+												</div>
+												<p className="text-xs text-gray-500 mt-1">
+													Upgrade to a paid plan to enable text message
+													notifications.
+												</p>
+											</div>
+										)}
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div className="bg-gradient-to-br from-black/50 via-purple-900/10 to-black/50 backdrop-blur-sm rounded-lg p-6 border border-white/10">
+						<div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
+							<div className="flex-1">
+								<h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70">
+									Alert Names
+								</h2>
+								<p className="mt-1 text-sm text-gray-400">
+									Enter first and last names exactly as they appear on official
+									records. You can edit these names anytime. Note: We don&apos;t
+									check for nicknames, middle names, or name variations.
+								</p>
+							</div>
+							<div className="md:self-start">
+								<button
+									onClick={handleAddName}
+									disabled={names.length >= 10}
+									className="bg-gradient-to-r from-emerald-600/80 to-teal-600/80 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded inline-flex items-center justify-center gap-2 transition-all whitespace-nowrap"
+								>
+									<PlusCircle className="h-5 w-5" />
+									Add Name
+								</button>
+							</div>
+						</div>
+
+						<div className="space-y-4">
+							{names.map((name, index) => (
+								<NameFields
+									key={index}
+									name={name}
+									index={index}
+									onDelete={handleDeleteName}
+									onChange={handleNameChange}
+								/>
+							))}
+						</div>
+
+						{hasUnsavedChanges && (
+							<div className="mt-6 flex justify-end">
+								<button
+									onClick={handleSaveNames}
+									className="bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-2 rounded transition-all"
+								>
+									Save Changes
+								</button>
+							</div>
+						)}
+					</div>
+				</div>
 			</div>
 		</div>
 	)

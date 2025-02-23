@@ -1,9 +1,55 @@
+'use client'
 import { HeroSection } from '@/components/blocks/hero-section-dark'
 import { Feature } from '@/components/ui/feature-section-with-grid'
 import { Pricing } from '@/components/ui/pricing-cards'
 import { Faq3 } from '@/components/blocks/faq3'
+import { useAuthenticator } from '@aws-amplify/ui-react'
+import { Schema } from '@/amplify/data/resource'
+import { generateClient } from 'aws-amplify/api'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
+
+const client = generateClient<Schema>()
 
 export default function Home() {
+	const { user } = useAuthenticator((context) => [context.user])
+
+	// Query for user data to get Stripe customer ID
+	const { data: userData } = useQuery({
+		queryKey: ['users'],
+		queryFn: async () => {
+			const response = await client.models.User.list()
+			if (response.errors) {
+				throw new Error(response.errors[0].message)
+			}
+			return response.data
+		},
+		enabled: !!user?.username,
+	})
+
+	// Mutation for getting billing portal session
+	const { mutate: getBillingSession } = useMutation({
+		mutationFn: async (customerId: string) => {
+			const response = await client.mutations.createStripeCheckoutSession({
+				priceId:
+					process.env.NEXT_PUBLIC_WATCHFUL_CITIZEN_MONTHLY_STRIPE_PRICE_ID!,
+				customerId,
+				successUrl: window.location.href,
+				cancelUrl: window.location.href,
+			})
+			if (!response.data) {
+				throw new Error('Failed to create checkout session')
+			}
+			return response.data
+		},
+		onSuccess: (data) => {
+			window.location.href = data.sessionUrl
+		},
+		onError: (error) => {
+			toast.error(`Failed to access checkout session: ${error.message}`)
+		},
+	})
+
 	return (
 		<>
 			<main>
@@ -67,12 +113,21 @@ export default function Home() {
 				<div className="relative" id="pricing">
 					{/* Continue the gradient through pricing section */}
 					<div className="absolute inset-0 -z-10 bg-gradient-to-b from-pink-900/10 via-purple-900/20 to-blue-900/10" />
-					<Pricing />
-					<div id="faq" className="relative">
-						{/* Final gradient section */}
-						<div className="absolute inset-0 -z-10 bg-gradient-to-b from-blue-900/10 via-purple-900/10 to-transparent" />
-						<Faq3 />
-					</div>
+					<Pricing
+						isAuthenticated={!!user?.username}
+						onUpgrade={() => {
+							const dbUser = userData?.[0]
+							if (dbUser?.stripeCustomerId) {
+								getBillingSession(dbUser.stripeCustomerId)
+							}
+						}}
+					/>
+				</div>
+
+				<div id="faq" className="relative">
+					{/* Final gradient section */}
+					<div className="absolute inset-0 -z-10 bg-gradient-to-b from-blue-900/10 via-purple-900/10 to-transparent" />
+					<Faq3 />
 				</div>
 			</main>
 		</>

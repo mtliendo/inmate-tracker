@@ -28,15 +28,19 @@ export const handler: Handler = async (event: any) => {
 					event.detail.data.object.customer
 				)) as Stripe.Customer
 
-				await amplifyClient.models.User.update(
+				console.log('stripeCustomer', stripeCustomer)
+
+				const updatedUser = await amplifyClient.models.User.update(
 					{
 						id: stripeCustomer.metadata.userId,
 						stripePriceId: event.detail.data.object.items.data[0].price.id,
 						phone: stripeCustomer.phone,
-						status: event.detail.data.object.status as 'trialing' | 'paid',
+						status: 'paid',
 					},
 					{ authMode: 'iam' }
 				)
+
+				console.log('updated user', updatedUser)
 
 				return {
 					statusCode: 200,
@@ -48,7 +52,41 @@ export const handler: Handler = async (event: any) => {
 			break
 		case 'customer.subscription.deleted':
 			console.log('customer.subscription.deleted')
-			//remove all stripe info from db
+			//reset to the free plan
+			try {
+				const stripeCustomer = (await stripe.customers.retrieve(
+					event.detail.data.object.customer
+				)) as Stripe.Customer
+
+				// Get the current user to preserve their preferences
+				const currentUser = await amplifyClient.models.User.get(
+					{ id: stripeCustomer.metadata.userId },
+					{ authMode: 'iam' }
+				)
+
+				if (!currentUser.data) {
+					throw new Error('User not found')
+				}
+
+				await amplifyClient.models.User.update(
+					{
+						id: stripeCustomer.metadata.userId,
+						stripePriceId: null,
+						status: 'free',
+						inmateAlertPreferences: {
+							...currentUser.data.inmateAlertPreferences,
+							names: currentUser.data.inmateAlertPreferences.names || [],
+							alertMethod: 'EMAIL', // Reset to email only for free plan
+						},
+					},
+					{ authMode: 'iam' }
+				)
+			} catch (error) {
+				console.log('error', error)
+			}
+			break
+		case 'checkout.session.completed':
+			console.log('checkout.session.completed')
 			try {
 				const stripeCustomer = (await stripe.customers.retrieve(
 					event.detail.data.object.customer
@@ -57,8 +95,7 @@ export const handler: Handler = async (event: any) => {
 				await amplifyClient.models.User.update(
 					{
 						id: stripeCustomer.metadata.userId,
-						stripeCustomerId: null,
-						stripePriceId: null,
+						phone: stripeCustomer.phone,
 					},
 					{ authMode: 'iam' }
 				)

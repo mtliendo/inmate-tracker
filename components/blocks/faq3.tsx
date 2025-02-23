@@ -1,13 +1,12 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
 import {
 	Accordion,
 	AccordionContent,
 	AccordionItem,
 	AccordionTrigger,
 } from '@/components/ui/accordion'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
 
 interface FaqItem {
 	id: string
@@ -98,37 +97,19 @@ const Faq3 = ({
 						</AccordionItem>
 					))}
 				</Accordion>
-				<div className="mx-auto flex max-w-4xl flex-col items-center rounded-2xl bg-gradient-to-br from-purple-50/50 via-pink-50/50 to-purple-50/30 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-purple-900/10 p-8 text-center md:p-10 lg:p-12 backdrop-blur-sm border border-purple-100/20 dark:border-purple-400/10">
-					<div className="relative">
-						<Avatar className="absolute mb-4 size-16 origin-bottom -translate-x-[60%] scale-[80%] border-2 border-purple-100 dark:border-purple-400/20 md:mb-5">
-							<AvatarImage src="https://shadcnblocks.com/images/block/avatar-2.webp" />
-							<AvatarFallback>SU</AvatarFallback>
-						</Avatar>
-						<Avatar className="absolute mb-4 size-16 origin-bottom translate-x-[60%] scale-[80%] border-2 border-purple-100 dark:border-purple-400/20 md:mb-5">
-							<AvatarImage src="https://shadcnblocks.com/images/block/avatar-3.webp" />
-							<AvatarFallback>SU</AvatarFallback>
-						</Avatar>
-						<Avatar className="mb-4 size-16 border-2 border-purple-100 dark:border-purple-400/20 md:mb-5">
-							<AvatarImage src="https://shadcnblocks.com/images/block/avatar-1.webp" />
-							<AvatarFallback>SU</AvatarFallback>
-						</Avatar>
-					</div>
-					<h3 className="mb-2 max-w-3xl font-semibold lg:text-lg text-purple-950 dark:text-purple-100">
+				<div className="mx-auto flex max-w-4xl flex-col items-center rounded-2xl bg-gradient-to-br from-black/50 via-purple-900/10 to-black/50 backdrop-blur-sm p-8 text-center md:p-10 lg:p-12 border border-white/10">
+					<h3 className="text-2xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70">
 						{supportHeading}
 					</h3>
-					<p className="mb-8 max-w-3xl text-purple-900/80 dark:text-purple-200/80 lg:text-lg">
-						{supportDescription}
-					</p>
-					<div className="flex w-full flex-col justify-center gap-2 sm:flex-row">
-						<Button
-							className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white w-full sm:w-auto"
-							asChild
-						>
-							<a href={supportButtonUrl} target="_blank">
-								{supportButtonText}
-							</a>
-						</Button>
-					</div>
+					<p className="mb-8 text-gray-400 max-w-2xl">{supportDescription}</p>
+					<Button
+						className="bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-600 hover:to-pink-600 text-white w-full sm:w-auto"
+						asChild
+					>
+						<a href={supportButtonUrl} target="_blank">
+							{supportButtonText}
+						</a>
+					</Button>
 				</div>
 			</div>
 		</section>

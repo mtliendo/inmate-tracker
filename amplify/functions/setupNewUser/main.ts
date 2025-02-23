@@ -31,7 +31,7 @@ export const handler: Handler = async (
 			{
 				email: ctx.arguments.email,
 				owner,
-				status: 'inactive',
+				status: 'free',
 				inmateAlertPreferences: {
 					names: [],
 					chargeTypeAlerts: 'NONE',
@@ -80,7 +80,6 @@ export const handler: Handler = async (
 			{
 				id: newUser.id,
 				stripeCustomerId: stripeCustomer.id,
-				status: 'inactive',
 			},
 			{ authMode: 'iam' }
 		)
@@ -95,16 +94,8 @@ export const handler: Handler = async (
 		throw new Error('Failed to update user with Stripe customer ID')
 	}
 
-	const customerSession = await stripe.customerSessions.create({
-		customer: stripeCustomer.id,
-		components: {
-			pricing_table: {
-				enabled: true,
-			},
-		},
-	})
-
 	return {
-		customerSession: customerSession.client_secret,
+		userId: newUser.id,
+		stripeCustomerId: stripeCustomer.id,
 	}
 }

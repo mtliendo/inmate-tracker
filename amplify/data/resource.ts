@@ -3,7 +3,8 @@ import { inmateCron } from '../functions/inmateCron/resource'
 import { inmateDDBStream } from '../functions/inmateDDBStream/resource'
 import { setupNewUser } from '../functions/setupNewUser/resource'
 import { ebSubscriptionEvents } from '../functions/ebSubscriptionEvents/resource'
-import { createStripeCustomerBillingPortalSession } from '../functions/createStripeCustomerBillingPortalSession/resource'
+import { createStripeCheckoutSession } from '../functions/createStripeCheckoutSession/resource'
+import { createStripeCustomerBillingSession } from '../functions/createStripeCustomerBillingSession/resource'
 const schema = a
 	.schema({
 		Name: a.customType({
@@ -22,7 +23,7 @@ const schema = a
 				owner: a.string().required(),
 				stripeCustomerId: a.string(),
 				stripePriceId: a.string(),
-				status: a.enum(['trialing', 'paid', 'inactive']),
+				status: a.enum(['free', 'paid', 'inactive', 'canceled']),
 				email: a.email().required(),
 				phone: a.phone(),
 				inmateAlertPreferences: a.ref('InmateAlertPreferences').required(),
@@ -48,22 +49,38 @@ const schema = a
 			.handler(a.handler.function(setupNewUser))
 			.returns(
 				a.customType({
-					customerSession: a.string().required(),
+					userId: a.string().required(),
+					stripeCustomerId: a.string().required(),
 				})
 			)
 			.authorization((allow) => [allow.authenticated()]),
-		createStripeCustomerBillingPortalSession: a
+		createStripeCheckoutSession: a
 			.mutation()
+			.arguments({
+				priceId: a.string().required(),
+				customerId: a.string().required(),
+				successUrl: a.string().required(),
+				cancelUrl: a.string().required(),
+			})
 			.returns(
 				a.customType({
 					sessionUrl: a.string().required(),
 				})
 			)
+			.handler(a.handler.function(createStripeCheckoutSession))
+			.authorization((allow) => [allow.authenticated()]),
+		createStripeCustomerBillingSession: a
+			.mutation()
 			.arguments({
 				customerId: a.string().required(),
 				returnUrl: a.string().required(),
 			})
-			.handler(a.handler.function(createStripeCustomerBillingPortalSession))
+			.returns(
+				a.customType({
+					sessionUrl: a.string().required(),
+				})
+			)
+			.handler(a.handler.function(createStripeCustomerBillingSession))
 			.authorization((allow) => [allow.authenticated()]),
 	})
 	.authorization((allow) => [
@@ -71,6 +88,8 @@ const schema = a
 		allow.resource(inmateDDBStream),
 		allow.resource(setupNewUser),
 		allow.resource(ebSubscriptionEvents),
+		allow.resource(createStripeCheckoutSession),
+		allow.resource(createStripeCustomerBillingSession),
 	])
 
 export type Schema = ClientSchema<typeof schema>
