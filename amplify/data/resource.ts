@@ -5,6 +5,9 @@ import { setupNewUser } from '../functions/setupNewUser/resource'
 import { ebSubscriptionEvents } from '../functions/ebSubscriptionEvents/resource'
 import { createStripeCheckoutSession } from '../functions/createStripeCheckoutSession/resource'
 import { createStripeCustomerBillingSession } from '../functions/createStripeCustomerBillingSession/resource'
+import { sendMMS } from '../functions/sendMMS/resource'
+import { sendEmail } from '../functions/sendEmail/resource'
+
 const schema = a
 	.schema({
 		Name: a.customType({
@@ -17,6 +20,12 @@ const schema = a
 			chargeTypeAlerts: a.enum(['MISDEMEANOR', 'FELONY', 'BOTH', 'NONE']),
 			hourlyAlertsEnabled: a.boolean(),
 			alertMethod: a.enum(['EMAIL', 'TEXT', 'EMAIL_AND_TEXT']),
+		}),
+		InmateNotification: a.customType({
+			name: a.string().required(),
+			bookingDateTime: a.string().required(),
+			charges: a.string().array().required(),
+			mugshotUrl: a.string(),
 		}),
 		User: a
 			.model({
@@ -82,6 +91,33 @@ const schema = a
 			)
 			.handler(a.handler.function(createStripeCustomerBillingSession))
 			.authorization((allow) => [allow.authenticated()]),
+		testSendMMS: a
+			.mutation()
+			.arguments({
+				phone: a.phone().required(),
+				inmate: a.ref('InmateNotification').required(),
+			})
+			.returns(
+				a.customType({
+					message: a.string().required(),
+					messageId: a.string().required(),
+				})
+			)
+			.handler(a.handler.function(sendMMS))
+			.authorization((allow) => [allow.authenticated()]),
+		testSendEmail: a
+			.mutation()
+			.arguments({
+				email: a.email().required(),
+				inmate: a.ref('InmateNotification').required(),
+			})
+			.returns(
+				a.customType({
+					message: a.string().required(),
+				})
+			)
+			.handler(a.handler.function(sendEmail))
+			.authorization((allow) => [allow.authenticated()]),
 	})
 	.authorization((allow) => [
 		allow.resource(inmateCron),
@@ -90,6 +126,8 @@ const schema = a
 		allow.resource(ebSubscriptionEvents),
 		allow.resource(createStripeCheckoutSession),
 		allow.resource(createStripeCustomerBillingSession),
+		allow.resource(sendMMS),
+		allow.resource(sendEmail),
 	])
 
 export type Schema = ClientSchema<typeof schema>

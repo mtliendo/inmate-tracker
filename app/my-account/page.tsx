@@ -470,6 +470,69 @@ function MyAccountPage() {
 										)}
 									</div>
 								</div>
+
+								{/* Test Notification Buttons */}
+								<div className="flex flex-col gap-2 pt-4 border-t border-white/10">
+									<p className="text-sm font-medium text-gray-300">
+										Test Notifications
+									</p>
+									<div className="flex flex-wrap gap-3">
+										<button
+											onClick={async () => {
+												if (!dbUser?.email) return
+												try {
+													await client.mutations.testSendEmail({
+														email: dbUser.email,
+														inmate: {
+															name: 'John Doe',
+															bookingDateTime: '2/21/2025 6:30 PM',
+															charges: ['Test Charge 1', 'Test Charge 2'],
+															mugshotUrl:
+																'https://www3.scottcountyiowa.gov/sheriff/images/inmates/225961_th.jpg',
+														},
+													})
+													toast.success('Test email sent successfully')
+												} catch (error) {
+													console.error('Failed to send test email:', error)
+													toast.error('Failed to send test email')
+												}
+											}}
+											className="bg-gradient-to-r from-blue-600/80 to-cyan-600/80 hover:from-blue-600 hover:to-cyan-600 text-white px-4 py-2 rounded text-sm flex items-center gap-2"
+										>
+											<Mail className="h-4 w-4" />
+											Test Email
+										</button>
+										{dbUser?.status === 'paid' && dbUser?.phone && (
+											<button
+												onClick={async () => {
+													try {
+														await client.mutations.testSendMMS({
+															phone: dbUser.phone!,
+															inmate: {
+																name: 'John Doe',
+																bookingDateTime: '2/21/2025 6:30 PM',
+																charges: ['Test Charge 1', 'Test Charge 2'],
+																mugshotUrl:
+																	'https://www3.scottcountyiowa.gov/sheriff/images/inmates/225961_th.jpg',
+															},
+														})
+														toast.success('Test SMS sent successfully')
+													} catch (error) {
+														console.error('Failed to send test SMS:', error)
+														toast.error('Failed to send test SMS')
+													}
+												}}
+												className="bg-gradient-to-r from-green-600/80 to-emerald-600/80 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded text-sm flex items-center gap-2"
+											>
+												<Phone className="h-4 w-4" />
+												Test SMS
+											</button>
+										)}
+									</div>
+									<p className="text-xs text-gray-500 mt-1">
+										Send a test notification to verify your settings.
+									</p>
+								</div>
 							</div>
 						</div>
 					</div>

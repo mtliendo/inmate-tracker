@@ -85,7 +85,7 @@ export function Navbar({ links = navLinks }: NavbarProps) {
 					<div className="hidden md:flex items-center gap-4">
 						{!user?.username ? (
 							<Button variant="ghost" className="gap-2" asChild>
-								<Link href="/" className="flex items-center gap-2">
+								<Link href="/my-account" className="flex items-center gap-2">
 									Login
 								</Link>
 							</Button>

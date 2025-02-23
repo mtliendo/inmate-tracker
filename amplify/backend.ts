@@ -1,5 +1,5 @@
 import { inmateCron } from './functions/inmateCron/resource'
-import { defineBackend } from '@aws-amplify/backend'
+import { defineBackend, secret } from '@aws-amplify/backend'
 import { auth } from './auth/resource'
 import { data } from './data/resource'
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam'
@@ -19,6 +19,8 @@ import { EventBus } from 'aws-cdk-lib/aws-events'
 import { LogGroup } from 'aws-cdk-lib/aws-logs'
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets'
 import { ebSubscriptionEvents } from './functions/ebSubscriptionEvents/resource'
+import { sendMMS } from './functions/sendMMS/resource'
+import { sendEmail } from './functions/sendEmail/resource'
 
 config({ path: '.env.local', override: false })
 const currentBranch = branchName() || process.env.AWS_BRANCH
@@ -31,7 +33,19 @@ const backend = defineBackend({
 	inmateQueuePoller,
 	setupNewUser,
 	ebSubscriptionEvents,
+	sendMMS,
+	sendEmail,
 })
+
+//*add environment varialbles to the sendMMS function
+backend.sendMMS.addEnvironment(
+	'TWILIO_PHONE_NUMBER',
+	process.env.TWILIO_PHONE_NUMBER!
+)
+backend.sendMMS.addEnvironment(
+	'TWILIO_ACCOUNT_SID',
+	process.env.TWILIO_ACCOUNT_SID!
+)
 
 const customResourcesStack = backend.createStack(
 	`InmateAlertsCustomResourcesStack-${currentBranch}`
@@ -39,8 +53,8 @@ const customResourcesStack = backend.createStack(
 
 //*--------SQS Queue Setup------
 
-//* create an SQS Queue
-const queue = new Queue(
+//* create an SQS Queue for email notifications
+const emailQueue = new Queue(
 	Stack.of(backend.data),
 	'inmateEmailNotificationQueue',
 	{
@@ -48,9 +62,24 @@ const queue = new Queue(
 		visibilityTimeout: Duration.seconds(30),
 	}
 )
+backend.sendEmail.addEnvironment('QUEUE_URL', emailQueue.queueUrl)
+backend.inmateDDBStream.addEnvironment('QUEUE_URL', emailQueue.queueUrl)
 
-//* permit a lambda function to poll sqs for messages
-queue.grantConsumeMessages(backend.inmateQueuePoller.resources.lambda)
+//* permit the lambda functions to interact with SQS
+backend.inmateDDBStream.resources.lambda.addToRolePolicy(
+	new PolicyStatement({
+		actions: ['sqs:SendMessage'],
+		resources: [emailQueue.queueArn],
+	})
+)
+backend.sendEmail.resources.lambda.addToRolePolicy(
+	new PolicyStatement({
+		actions: ['sqs:SendMessage'],
+		resources: [emailQueue.queueArn],
+	})
+)
+
+emailQueue.grantConsumeMessages(backend.inmateQueuePoller.resources.lambda)
 
 //* add the lambda functions as a target to the queue
 new EventSourceMapping(
@@ -58,7 +87,7 @@ new EventSourceMapping(
 	'InmateEmailNotificationQueueEventSourceMapping',
 	{
 		target: backend.inmateQueuePoller.resources.lambda,
-		eventSourceArn: queue.queueArn,
+		eventSourceArn: emailQueue.queueArn,
 		batchSize: 2, //* process a max of two messages at a time
 	}
 )
@@ -82,12 +111,6 @@ backend.inmateDDBStream.resources.lambda.addToRolePolicy(
 		resources: ['*'],
 	})
 )
-backend.inmateDDBStream.resources.lambda.addToRolePolicy(
-	new PolicyStatement({
-		actions: ['sqs:SendMessage'],
-		resources: [queue.queueArn],
-	})
-)
 
 new EventSourceMapping(Stack.of(backend.data), 'InmateDDBStreamMapping', {
 	target: backend.inmateDDBStream.resources.lambda,
@@ -96,7 +119,18 @@ new EventSourceMapping(Stack.of(backend.data), 'InmateDDBStreamMapping', {
 	retryAttempts: 2,
 })
 
-backend.inmateDDBStream.addEnvironment('QUEUE_URL', queue.queueUrl)
+backend.inmateDDBStream.addEnvironment(
+	'TWILIO_ACCOUNT_SID',
+	process.env.TWILIO_ACCOUNT_SID!
+)
+backend.inmateDDBStream.addEnvironment(
+	'TWILIO_API_KEY',
+	secret('TWILIO_API_KEY')
+)
+backend.inmateDDBStream.addEnvironment(
+	'TWILIO_PHONE_NUMBER',
+	process.env.TWILIO_PHONE_NUMBER!
+)
 
 //*---------end of DDB Stream for inmate table------------
 

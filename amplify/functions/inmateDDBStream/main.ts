@@ -7,6 +7,7 @@ import { env } from '$amplify/env/inmateDDBStream'
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { AttributeValue } from '@aws-sdk/client-dynamodb'
+import { sendMMS } from '../utils/sendMMS'
 
 const sqs = new SQSClient()
 const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env)
@@ -28,7 +29,9 @@ export const handler: DynamoDBStreamHandler = async (event) => {
 			) as Schema['Inmate']['type']
 			if (!newInmate.name) {
 				console.log('No name found for inmate')
+				continue
 			}
+
 			for (const user of users.data) {
 				const isMatch = user.inmateAlertPreferences.names.some((name) => {
 					if (name?.firstName && name?.lastName) {
@@ -46,25 +49,52 @@ export const handler: DynamoDBStreamHandler = async (event) => {
 					console.log('Notifying the user based on their alert preferences')
 
 					const userAlertPreferences = user.inmateAlertPreferences.alertMethod
+
+					// Handle email notifications through SQS
 					if (
 						userAlertPreferences === 'EMAIL' ||
 						userAlertPreferences === 'EMAIL_AND_TEXT'
 					) {
-						console.log('Sending email to the user using sqs')
+						console.log('Sending email notification via queue')
 						await sqs.send(
 							new SendMessageCommand({
-								QueueUrl: process.env.QUEUE_URL!,
+								QueueUrl: env.QUEUE_URL,
 								MessageBody: JSON.stringify({
 									email: user.email,
 									inmate: newInmate,
 								}),
 							})
 						)
-					} else if (
-						userAlertPreferences === 'TEXT' ||
-						userAlertPreferences === 'EMAIL_AND_TEXT'
+					}
+
+					// Handle SMS notifications directly using the utility
+					if (
+						(userAlertPreferences === 'TEXT' ||
+							userAlertPreferences === 'EMAIL_AND_TEXT') &&
+						user.phone
 					) {
-						console.log('Sending SMS to the user')
+						console.log('Sending SMS notification')
+						try {
+							await sendMMS({
+								phone: user.phone,
+								inmate: {
+									name: newInmate.name,
+									bookingDateTime:
+										newInmate.bookingDateTime || new Date().toISOString(),
+									charges: (newInmate.charges || []).filter(
+										(c): c is string => c !== null
+									),
+									mugshotUrl: newInmate.mugshotUrl || '',
+								},
+								twilioConfig: {
+									accountSid: env.TWILIO_ACCOUNT_SID,
+									apiKey: env.TWILIO_API_KEY,
+									phoneNumber: env.TWILIO_PHONE_NUMBER,
+								},
+							})
+						} catch (error) {
+							console.error('Failed to send SMS:', error)
+						}
 					}
 				}
 			}
