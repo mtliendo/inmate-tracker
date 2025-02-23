@@ -8,7 +8,7 @@ import { Amplify } from 'aws-amplify'
 import config from '@/amplify_outputs.json'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
-
+import { FathomAnalytics } from './fathom'
 const queryClient = new QueryClient()
 
 Amplify.configure(config)
@@ -34,6 +34,7 @@ export default function RootLayout({
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 				suppressHydrationWarning
 			>
+				<FathomAnalytics />
 				<QueryClientProvider client={queryClient}>
 					<div className="flex flex-col min-h-screen">
 						<Authenticator.Provider>
