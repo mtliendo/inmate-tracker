@@ -7,6 +7,7 @@ import { Footer } from '@/components/ui/footer'
 import { Amplify } from 'aws-amplify'
 import config from '@/amplify_outputs.json'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Toaster } from 'sonner'
 
 const queryClient = new QueryClient()
 
@@ -37,8 +38,9 @@ export default function RootLayout({
 					<div className="flex flex-col min-h-screen">
 						<Authenticator.Provider>
 							<Navbar />
-							<div className="flex-grow">{children}</div>
+							<div className="flex-grow pt-20">{children}</div>
 							<Footer />
+							<Toaster richColors position="top-center" />
 						</Authenticator.Provider>
 					</div>
 				</QueryClientProvider>

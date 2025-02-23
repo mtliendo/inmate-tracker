@@ -4,7 +4,11 @@ import { Amplify } from 'aws-amplify'
 import { generateClient } from 'aws-amplify/data'
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime'
 import { env } from '$amplify/env/inmateDDBStream'
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
+import { unmarshall } from '@aws-sdk/util-dynamodb'
+import { AttributeValue } from '@aws-sdk/client-dynamodb'
 
+const sqs = new SQSClient()
 const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env)
 
 Amplify.configure(resourceConfig, libraryOptions)
@@ -19,7 +23,9 @@ export const handler: DynamoDBStreamHandler = async (event) => {
 		if (record.eventName === 'INSERT') {
 			// business logic to process new records
 			console.log(`New Image: ${JSON.stringify(record.dynamodb?.NewImage)}`)
-			const newInmate = record.dynamodb?.NewImage as Schema['Inmate']['type']
+			const newInmate = unmarshall(
+				record.dynamodb?.NewImage as Record<string, AttributeValue>
+			) as Schema['Inmate']['type']
 			if (!newInmate.name) {
 				console.log('No name found for inmate')
 			}
@@ -40,12 +46,25 @@ export const handler: DynamoDBStreamHandler = async (event) => {
 					console.log('Notifying the user based on their alert preferences')
 
 					const userAlertPreferences = user.inmateAlertPreferences.alertMethod
-					if (userAlertPreferences === 'EMAIL') {
-						console.log('Sending email to the user')
-					} else if (userAlertPreferences === 'TEXT') {
+					if (
+						userAlertPreferences === 'EMAIL' ||
+						userAlertPreferences === 'EMAIL_AND_TEXT'
+					) {
+						console.log('Sending email to the user using sqs')
+						await sqs.send(
+							new SendMessageCommand({
+								QueueUrl: process.env.QUEUE_URL!,
+								MessageBody: JSON.stringify({
+									email: user.email,
+									inmate: newInmate,
+								}),
+							})
+						)
+					} else if (
+						userAlertPreferences === 'TEXT' ||
+						userAlertPreferences === 'EMAIL_AND_TEXT'
+					) {
 						console.log('Sending SMS to the user')
-					} else if (userAlertPreferences === 'EMAIL_AND_TEXT') {
-						console.log('Sending both email and SMS to the user')
 					}
 				}
 			}

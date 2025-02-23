@@ -32,6 +32,8 @@ export const handler: Handler = async (event: any) => {
 					{
 						id: stripeCustomer.metadata.userId,
 						stripePriceId: event.detail.data.object.items.data[0].price.id,
+						phone: stripeCustomer.phone,
+						status: event.detail.data.object.status as 'trialing' | 'paid',
 					},
 					{ authMode: 'iam' }
 				)

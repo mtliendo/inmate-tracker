@@ -17,14 +17,7 @@ export const handler: SQSHandler = async (event) => {
 			from: 'Inmate Alerts <support@mail.focusotter.com>',
 			to: [message.email],
 			subject: `Inmate Alert`,
-			html: '<p>it works!</p>',
-			attachments: message.attachments
-				? [
-						{
-							path: 'https://github.com/mtliendo.png',
-						},
-				  ]
-				: [],
+			html: `<p>it works! <img src="https://github.com/mtliendo.png" alt="mugshot" /></p>`,
 		})
 	}
 }

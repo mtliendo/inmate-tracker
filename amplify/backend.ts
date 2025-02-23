@@ -97,7 +97,6 @@ new EventSourceMapping(Stack.of(backend.data), 'InmateDDBStreamMapping', {
 })
 
 backend.inmateDDBStream.addEnvironment('QUEUE_URL', queue.queueUrl)
-backend.inmateDDBStream.addEnvironment('QUEUE_ARN', queue.queueArn)
 
 //*---------end of DDB Stream for inmate table------------
 
@@ -113,23 +112,27 @@ const stripeEventBus = EventBus.fromEventBusArn(
 //create a new cloudwatch log group and Rule for stripe SUBSCRIPTION events
 const stripeSubscriptionEventsLogGroup = new LogGroup(
 	customResourcesStack,
-	'qcspStripeSubscriptionEventsLogGroup',
+	'inmateAlertsStripeSubscriptionEventsLogGroup',
 	{
-		logGroupName: '/aws/events/qcsp-stripeSubscriptionEventsLogGroup',
+		logGroupName: '/aws/events/inmateAlerts-stripeSubscriptionEventsLogGroup',
 		retention: RetentionDays.ONE_MONTH,
 	}
 )
 
-new Rule(customResourcesStack, 'qcspStripeEventBridgeSubscriptionRule', {
-	ruleName: 'qcsp-stripe-subscription-events-rule',
-	eventBus: stripeEventBus,
-	targets: [
-		new LambdaFunction(backend.ebSubscriptionEvents.resources.lambda),
-		new CloudWatchLogGroup(stripeSubscriptionEventsLogGroup),
-	],
-	eventPattern: {
-		source: [`aws.partner/stripe.com/${process.env.STRIPE_EVENTBUS_ID}`],
-	},
-})
+new Rule(
+	customResourcesStack,
+	'inmateAlertsStripeEventBridgeSubscriptionRule',
+	{
+		ruleName: 'inmateAlerts-stripe-subscription-events-rule',
+		eventBus: stripeEventBus,
+		targets: [
+			new LambdaFunction(backend.ebSubscriptionEvents.resources.lambda),
+			new CloudWatchLogGroup(stripeSubscriptionEventsLogGroup),
+		],
+		eventPattern: {
+			source: [`aws.partner/stripe.com/${process.env.STRIPE_EVENTBUS_ID}`],
+		},
+	}
+)
 
 //*---------end of EventBridge for Stripe------------

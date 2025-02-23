@@ -1,10 +1,10 @@
 'use client'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { ShootingStars } from '@/components/ui/shooting-stars'
+import Link from 'next/link'
+import { CheckCircle2 } from 'lucide-react'
 
-import '@aws-amplify/ui-react/styles.css'
-import { Authenticator } from '@aws-amplify/ui-react'
-function PricingPage() {
+export default function SuccessPage() {
 	return (
 		<div className="min-h-screen w-full bg-black relative">
 			{/* Background with stars */}
@@ -14,14 +14,24 @@ function PricingPage() {
 			</div>
 
 			{/* Content */}
-			<Authenticator
-				socialProviders={['google', 'facebook']}
-				className={
-					'flex items-center justify-center relative z-50 bg-transparent mx-auto my-20'
-				}
-			>
-				<PricingTable />
-			</Authenticator>
+			<div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4">
+				<div className="text-center max-w-2xl mx-auto bg-black/50 p-8 rounded-2xl backdrop-blur-sm border border-white/10">
+					<CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-6" />
+					<h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
+						Thank You for Subscribing!
+					</h1>
+					<p className="text-gray-300 mb-8 text-lg">
+						Your subscription has been confirmed. You&apos;re now ready to start
+						setting up your inmate alerts.
+					</p>
+					<Link
+						href="/my-account"
+						className="inline-flex items-center px-6 py-3 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+					>
+						Go to My Account
+					</Link>
+				</div>
+			</div>
 
 			{/* Multiple shooting star layers with different colors and speeds */}
 			<ShootingStars
@@ -81,21 +91,4 @@ function PricingPage() {
 			`}</style>
 		</div>
 	)
-}
-
-export default PricingPage
-
-/* todo: On this component, check if there is a user. If there is, check to see if there is,
-then pull the stripe customer id from the user. If there is no user, create a new user
-and then create a new stripe customer id. Then, pull the stripe customer id from the user.
-Then, display the pricing page with the stripe customer id.
-
-Show the user a loading state if the stripe customer id is being pulled.
-
-*/
-const PricingTable = () => {
-	useEffect(() => {
-		console.log('in here!!')
-	}, [])
-	return <div>PricingTable</div>
 }
