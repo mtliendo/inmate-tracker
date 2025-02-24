@@ -37,6 +37,19 @@ const backend = defineBackend({
 	sendEmail,
 })
 
+const { cfnUserPool } = backend.auth.resources.cfnResources
+//* Loosen up the default password policy
+cfnUserPool.policies = {
+	passwordPolicy: {
+		minimumLength: 8,
+		requireLowercase: true,
+		requireNumbers: true,
+		requireSymbols: false,
+		requireUppercase: true,
+		temporaryPasswordValidityDays: 7,
+	},
+}
+
 //*add environment varialbles to the sendMMS function
 backend.sendMMS.addEnvironment(
 	'TWILIO_PHONE_NUMBER',

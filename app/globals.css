@@ -146,3 +146,10 @@ html {
 	color: #666;
 	background-color: white;
 }
+/* Style the divider */
+[data-amplify-authenticator] [name='country_code'] {
+	color: #666;
+	background-color: white;
+	height: 42px;
+	margin-top: 8px;
+}

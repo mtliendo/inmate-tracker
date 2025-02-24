@@ -29,9 +29,11 @@ const schema = a
 		}),
 		User: a
 			.model({
+				name: a.string().required(),
 				owner: a.string().required(),
 				stripeCustomerId: a.string(),
 				stripePriceId: a.string(),
+				disclaimerAcknowledged: a.boolean(),
 				status: a.enum(['free', 'paid', 'inactive', 'canceled']),
 				email: a.email().required(),
 				phone: a.phone(),

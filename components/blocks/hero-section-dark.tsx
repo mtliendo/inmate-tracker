@@ -62,7 +62,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
 			ctaText = 'Start Tracking',
 			ctaHref = '#pricing',
 			bottomImage = {
-				dark: 'https://farmui.vercel.app/dashboard.png',
+				dark: '/hero.png',
 			},
 			gridOptions,
 			...props

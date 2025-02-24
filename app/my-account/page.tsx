@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { PlusCircle, Trash2, CreditCard, Mail, Phone } from 'lucide-react'
 import { PLAN_LIMITS, PLAN_DETAILS } from '@/app/types/subscription'
+import { useRouter } from 'next/navigation'
 
 const client = generateClient<Schema>()
 
@@ -69,8 +70,9 @@ function MyAccountPage() {
 	const queryClient = useQueryClient()
 	const [names, setNames] = React.useState<NameInput[]>([])
 	const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false)
-
+	const router = useRouter()
 	// Query for user data
+
 	const {
 		data: userData,
 		isLoading,
@@ -100,18 +102,12 @@ function MyAccountPage() {
 		}
 	}, [userData])
 
-	// Mutation for creating a new user
-	const { mutate: createUser, data: newUserData } = useMutation({
-		mutationFn: async () => {
-			const response = await client.mutations.setupNewUser({
-				email: user.signInDetails?.loginId as string,
-			})
-			if (!response.data) {
-				throw new Error('Failed to create new user')
-			}
-			return response.data
-		},
-	})
+	// Check if user has acknowledged disclaimer
+	React.useEffect(() => {
+		if (userData?.[0] && !userData[0].disclaimerAcknowledged) {
+			router.push('/acknowledgement')
+		}
+	}, [userData, router])
 
 	// Mutation for updating names
 	const { mutate: updateNames } = useMutation({
@@ -192,13 +188,6 @@ function MyAccountPage() {
 			toast.error(`Failed to update notification preferences: ${error.message}`)
 		},
 	})
-
-	// If we have no users and haven't created one yet, create one
-	React.useEffect(() => {
-		if (userData && userData.length === 0 && !newUserData) {
-			createUser()
-		}
-	}, [userData, newUserData, createUser])
 
 	const handleAddName = () => {
 		const currentPlan = userData?.[0]?.stripePriceId
@@ -301,7 +290,7 @@ function MyAccountPage() {
 				<div className="max-w-3xl mx-auto">
 					<div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
 						<h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70">
-							My Account
+							Welcome, {dbUser?.name}
 						</h1>
 						<div className="flex flex-col md:flex-row gap-4">
 							<button
@@ -373,7 +362,7 @@ function MyAccountPage() {
 											<Mail className="h-4 w-4" />
 											<span>{dbUser?.email}</span>
 										</div>
-										{dbUser?.status === 'paid' && dbUser?.phone && (
+										{dbUser?.phone && (
 											<div className="flex items-center gap-2">
 												<Phone className="h-4 w-4" />
 												<span>{dbUser.phone}</span>
@@ -387,87 +376,60 @@ function MyAccountPage() {
 										Alert Method
 									</p>
 									<div className="flex flex-col gap-3">
-										{dbUser?.status === 'paid' ? (
-											<>
-												<label className="flex items-center gap-3">
-													<input
-														type="radio"
-														name="alertMethod"
-														value="EMAIL"
-														checked={
-															dbUser.inmateAlertPreferences?.alertMethod ===
-															'EMAIL'
-														}
-														onChange={() => {
-															if (!dbUser) return
-															updateNotificationPreferences('EMAIL')
-														}}
-														className="h-4 w-4 text-purple-500 border-gray-600 bg-black/50 focus:ring-purple-500/20"
-													/>
-													<span className="text-sm text-gray-300">
-														Email only
-													</span>
-												</label>
-												<label className="flex items-center gap-3">
-													<input
-														type="radio"
-														name="alertMethod"
-														value="TEXT"
-														checked={
-															dbUser.inmateAlertPreferences?.alertMethod ===
-															'TEXT'
-														}
-														onChange={() => {
-															if (!dbUser) return
-															updateNotificationPreferences('TEXT')
-														}}
-														className="h-4 w-4 text-purple-500 border-gray-600 bg-black/50 focus:ring-purple-500/20"
-													/>
-													<span className="text-sm text-gray-300">
-														Text message only
-													</span>
-												</label>
-												<label className="flex items-center gap-3">
-													<input
-														type="radio"
-														name="alertMethod"
-														value="EMAIL_AND_TEXT"
-														checked={
-															dbUser.inmateAlertPreferences?.alertMethod ===
-															'EMAIL_AND_TEXT'
-														}
-														onChange={() => {
-															if (!dbUser) return
-															updateNotificationPreferences('EMAIL_AND_TEXT')
-														}}
-														className="h-4 w-4 text-purple-500 border-gray-600 bg-black/50 focus:ring-purple-500/20"
-													/>
-													<span className="text-sm text-gray-300">
-														Both email and text message
-													</span>
-												</label>
-											</>
-										) : (
-											<div className="flex flex-col gap-2">
-												<div className="flex items-center gap-3">
-													<input
-														type="radio"
-														name="alertMethod"
-														value="EMAIL"
-														checked={true}
-														disabled
-														className="h-4 w-4 text-purple-500 border-gray-600 bg-black/50 focus:ring-purple-500/20"
-													/>
-													<span className="text-sm text-gray-300">
-														Email only
-													</span>
-												</div>
-												<p className="text-xs text-gray-500 mt-1">
-													Upgrade to a paid plan to enable text message
-													notifications.
-												</p>
-											</div>
-										)}
+										<label className="flex items-center gap-3">
+											<input
+												type="radio"
+												name="alertMethod"
+												value="EMAIL"
+												checked={
+													dbUser?.inmateAlertPreferences?.alertMethod ===
+													'EMAIL'
+												}
+												onChange={() => {
+													if (!dbUser) return
+													updateNotificationPreferences('EMAIL')
+												}}
+												className="h-4 w-4 text-purple-500 border-gray-600 bg-black/50 focus:ring-purple-500/20"
+											/>
+											<span className="text-sm text-gray-300">Email only</span>
+										</label>
+										<label className="flex items-center gap-3">
+											<input
+												type="radio"
+												name="alertMethod"
+												value="TEXT"
+												checked={
+													dbUser?.inmateAlertPreferences?.alertMethod === 'TEXT'
+												}
+												onChange={() => {
+													if (!dbUser) return
+													updateNotificationPreferences('TEXT')
+												}}
+												className="h-4 w-4 text-purple-500 border-gray-600 bg-black/50 focus:ring-purple-500/20"
+											/>
+											<span className="text-sm text-gray-300">
+												Text message only
+											</span>
+										</label>
+										<label className="flex items-center gap-3">
+											<input
+												type="radio"
+												name="alertMethod"
+												value="EMAIL_AND_TEXT"
+												checked={
+													dbUser?.inmateAlertPreferences?.alertMethod ===
+													'EMAIL_AND_TEXT'
+												}
+												onChange={() => {
+													if (!dbUser) return
+													updateNotificationPreferences('EMAIL_AND_TEXT')
+												}}
+												className="h-4 w-4 text-purple-500 border-gray-600 bg-black/50 focus:ring-purple-500/20"
+											/>
+											<span className="text-sm text-gray-300">
+												Both email and text message
+											</span>
+										</label>
 									</div>
 								</div>
 
@@ -484,11 +446,19 @@ function MyAccountPage() {
 													await client.mutations.testSendEmail({
 														email: dbUser.email,
 														inmate: {
-															name: 'John Doe',
-															bookingDateTime: '2/21/2025 6:30 PM',
+															name: 'FirstName LastName',
+															bookingDateTime: new Date().toLocaleString(
+																'en-US',
+																{
+																	month: '2-digit',
+																	day: '2-digit',
+																	year: 'numeric',
+																	hour: '2-digit',
+																	minute: '2-digit',
+																}
+															),
 															charges: ['Test Charge 1', 'Test Charge 2'],
-															mugshotUrl:
-																'https://www3.scottcountyiowa.gov/sheriff/images/inmates/225961_th.jpg',
+															mugshotUrl: 'https://robohash.org/inmate.png',
 														},
 													})
 													toast.success('Test email sent successfully')
@@ -502,18 +472,26 @@ function MyAccountPage() {
 											<Mail className="h-4 w-4" />
 											Test Email
 										</button>
-										{dbUser?.status === 'paid' && dbUser?.phone && (
+										{dbUser?.phone && (
 											<button
 												onClick={async () => {
 													try {
 														await client.mutations.testSendMMS({
 															phone: dbUser.phone!,
 															inmate: {
-																name: 'John Doe',
-																bookingDateTime: '2/21/2025 6:30 PM',
+																name: 'FirstName LastName',
+																bookingDateTime: new Date().toLocaleString(
+																	'en-US',
+																	{
+																		month: '2-digit',
+																		day: '2-digit',
+																		year: 'numeric',
+																		hour: '2-digit',
+																		minute: '2-digit',
+																	}
+																),
 																charges: ['Test Charge 1', 'Test Charge 2'],
-																mugshotUrl:
-																	'https://www3.scottcountyiowa.gov/sheriff/images/inmates/225961_th.jpg',
+																mugshotUrl: 'https://robohash.org/inmate.png',
 															},
 														})
 														toast.success('Test SMS sent successfully')
@@ -590,4 +568,26 @@ function MyAccountPage() {
 	)
 }
 
-export default withAuthenticator(MyAccountPage)
+const formFields = {
+	signUp: {
+		given_name: {
+			order: 1,
+			label: 'Full Name',
+			placeholder: 'Full Name',
+		},
+		email: {
+			order: 2,
+		},
+		phone_number: {
+			order: 3,
+		},
+		password: {
+			order: 4,
+		},
+		confirm_password: {
+			order: 5,
+		},
+	},
+}
+
+export default withAuthenticator(MyAccountPage, { formFields })

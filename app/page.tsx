@@ -1,6 +1,6 @@
 'use client'
 import { HeroSection } from '@/components/blocks/hero-section-dark'
-import { Feature } from '@/components/ui/feature-section-with-grid'
+
 import { Pricing } from '@/components/ui/pricing-cards'
 import { Faq3 } from '@/components/blocks/faq3'
 import { useAuthenticator } from '@aws-amplify/ui-react'
@@ -62,9 +62,6 @@ export default function Home() {
 						description="Never miss an update about inmates in Scott County, Iowa. Get instant alerts about bookings, releases, and status changes delivered straight to your phone or email. Perfect for families, legal professionals, and concerned citizens."
 						ctaText="Start Tracking Now"
 						ctaHref="#pricing"
-						bottomImage={{
-							dark: 'https://www.launchuicomponents.com/app-dark.png',
-						}}
 						gridOptions={{
 							angle: 65,
 							opacity: 0.4,
@@ -106,8 +103,6 @@ export default function Home() {
 
 					{/* Continuous gradient background starting from middle of features */}
 					<div className="absolute inset-0 top-1/2 -z-20 bg-gradient-to-b from-transparent via-purple-950/10 to-pink-900/10" />
-
-					<Feature />
 				</div>
 
 				<div className="relative" id="pricing">

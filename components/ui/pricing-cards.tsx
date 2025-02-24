@@ -102,7 +102,7 @@ function Pricing({ isAuthenticated, onUpgrade }: PricingProps) {
 												Change Plan <MoveRight className="h-4 w-4" />
 											</span>
 										) : (
-											<a href="/my-account">
+											<a href="/acknowledgement">
 												Start Free <MoveRight className="h-4 w-4" />
 											</a>
 										)}
@@ -190,7 +190,7 @@ function Pricing({ isAuthenticated, onUpgrade }: PricingProps) {
 												Change Plan <MoveRight className="h-4 w-4" />
 											</span>
 										) : (
-											<a href="/my-account">
+											<a href="/acknowledgement">
 												Subscribe Now <MoveRight className="h-4 w-4" />
 											</a>
 										)}
@@ -278,7 +278,7 @@ function Pricing({ isAuthenticated, onUpgrade }: PricingProps) {
 												Change Plan <MoveRight className="h-4 w-4" />
 											</span>
 										) : (
-											<a href="/my-account">
+											<a href="/acknowledgement">
 												Subscribe Now <MoveRight className="h-4 w-4" />
 											</a>
 										)}

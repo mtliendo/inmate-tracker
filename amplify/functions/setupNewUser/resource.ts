@@ -3,7 +3,7 @@ import { defineFunction, secret } from '@aws-amplify/backend'
 export const setupNewUser = defineFunction({
 	name: 'setupNewUser',
 	entry: './main.ts',
-	resourceGroupName: 'data',
+	resourceGroupName: 'auth',
 	runtime: 22,
 	memoryMB: 512,
 	environment: {

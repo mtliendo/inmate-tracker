@@ -1,11 +1,10 @@
-import type { Handler } from 'aws-lambda'
+import type { PostConfirmationTriggerHandler } from 'aws-lambda'
 import { type Schema } from '../../data/resource'
 import { Amplify } from 'aws-amplify'
 import { generateClient } from 'aws-amplify/data'
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime'
 import { env } from '$amplify/env/setupNewUser'
 import Stripe from 'stripe'
-import { AppSyncIdentityCognito, Context } from '@aws-appsync/utils'
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string)
 const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env)
 
@@ -13,24 +12,21 @@ Amplify.configure(resourceConfig, libraryOptions)
 
 const client = generateClient<Schema>()
 
-export const handler: Handler = async (
-	ctx: Context<Schema['setupNewUser']['args']>
-): Promise<Schema['setupNewUser']['returnType']> => {
-	const identity = ctx.identity as AppSyncIdentityCognito
-	console.log('identity', identity)
-	const owner = `${identity.sub}::${identity.username}`
-	console.log('owner', owner)
-	if (!ctx.arguments.email) {
-		throw new Error('Email is required')
-	}
+export const handler: PostConfirmationTriggerHandler = async (event) => {
+	const owner = `${event.request.userAttributes.sub}::${event.userName}`
+	const userAttributes = event.request.userAttributes
+	console.log('event', event)
 
 	// Step 1: Create user in database
 	let newUser
 	try {
 		const result = await client.models.User.create(
 			{
-				email: ctx.arguments.email,
+				email: userAttributes.email,
 				owner,
+				name: userAttributes.given_name,
+				phone: userAttributes.phone_number,
+				disclaimerAcknowledged: false,
 				status: 'free',
 				inmateAlertPreferences: {
 					names: [],
@@ -45,18 +41,19 @@ export const handler: Handler = async (
 		newUser = result.data
 	} catch (error) {
 		console.error('Failed to create user in database:', error)
-		throw new Error(`Failed to create user ${ctx.arguments.email} in database`)
+		throw new Error(`Failed to create user ${userAttributes.email} in database`)
 	}
 
 	if (!newUser || !newUser.id) {
-		throw new Error(`Failed to create user ${ctx.arguments.email} in database`)
+		throw new Error(`Failed to create user ${userAttributes.email} in database`)
 	}
 
 	// Step 2: Create Stripe customer
 	let stripeCustomer: Stripe.Customer
 	try {
 		stripeCustomer = await stripe.customers.create({
-			email: ctx.arguments.email,
+			email: userAttributes.email,
+			phone: userAttributes.phone_number,
 			metadata: {
 				userId: newUser.id,
 			},
@@ -70,7 +67,7 @@ export const handler: Handler = async (
 		}
 		console.error('Failed to create Stripe customer:', error)
 		throw new Error(
-			`Failed to create Stripe customer for user ${ctx.arguments.email}`
+			`Failed to create Stripe customer for user ${userAttributes.email}`
 		)
 	}
 
@@ -94,8 +91,5 @@ export const handler: Handler = async (
 		throw new Error('Failed to update user with Stripe customer ID')
 	}
 
-	return {
-		userId: newUser.id,
-		stripeCustomerId: stripeCustomer.id,
-	}
+	return event
 }
