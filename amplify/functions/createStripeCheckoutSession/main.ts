@@ -1,7 +1,7 @@
 import { Handler } from 'aws-cdk-lib/aws-lambda'
 import { Stripe } from 'stripe'
 import { Context } from '@aws-appsync/utils'
-import { env } from '$amplify/env/createStripeCustomerBillingPortalSession'
+import { env } from '$amplify/env/createStripeCheckoutSession'
 import { Schema } from '../../data/resource'
 const stripe = new Stripe(env.STRIPE_SECRET_KEY)
 
