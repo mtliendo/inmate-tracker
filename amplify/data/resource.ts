@@ -51,7 +51,7 @@ const schema = a
 				profileUrl: a.string(),
 				charges: a.string().array(),
 			})
-			.authorization((allow) => [allow.group('none')]),
+			.authorization((allow) => [allow.authenticated().to(['list'])]),
 		setupNewUser: a
 			.mutation()
 			.arguments({

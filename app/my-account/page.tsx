@@ -6,11 +6,32 @@ import { generateClient } from 'aws-amplify/api'
 import { useAuthenticator } from '@aws-amplify/ui-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { PlusCircle, Trash2, CreditCard, Mail, Phone } from 'lucide-react'
+import {
+	PlusCircle,
+	Trash2,
+	CreditCard,
+	Mail,
+	Phone,
+	ChevronDown,
+} from 'lucide-react'
 import { PLAN_LIMITS, PLAN_DETAILS } from '@/app/types/subscription'
 import { useRouter } from 'next/navigation'
+import { startOfDay, formatISO } from 'date-fns'
+import { toZonedTime } from 'date-fns-tz'
 
 const client = generateClient<Schema>()
+
+// Chicago timezone constant
+const CHICAGO_TIMEZONE = 'America/Chicago'
+
+// Function to get the start of day in Chicago timezone
+function getChicagoStartOfDay(): string {
+	// Get the start of day in Chicago timezone
+	const now = new Date()
+	const chicagoDate = toZonedTime(now, CHICAGO_TIMEZONE)
+	const chicagoStartOfDay = startOfDay(chicagoDate)
+	return formatISO(chicagoStartOfDay)
+}
 
 type NameInput = {
 	firstName: string
@@ -70,6 +91,12 @@ function MyAccountPage() {
 	const queryClient = useQueryClient()
 	const [names, setNames] = React.useState<NameInput[]>([])
 	const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false)
+	const [selectedInmate, setSelectedInmate] = React.useState<
+		Schema['Inmate']['type'] | null
+	>(null)
+	const [isDropdownOpen, setIsDropdownOpen] = React.useState(false)
+	const [isSendingEmail, setIsSendingEmail] = React.useState(false)
+	const [isSendingSMS, setIsSendingSMS] = React.useState(false)
 	const router = useRouter()
 	// Query for user data
 
@@ -87,6 +114,37 @@ function MyAccountPage() {
 			return response.data
 		},
 		enabled: !!user.signInDetails?.loginId,
+	})
+
+	// Query for today's inmates
+	const {
+		data: todayInmates,
+		isLoading: isLoadingInmates,
+		error: inmatesError,
+	} = useQuery({
+		queryKey: ['todayInmates'],
+		queryFn: async () => {
+			const startOfToday = getChicagoStartOfDay()
+			const response = await client.models.Inmate.list({
+				filter: {
+					createdAt: {
+						ge: startOfToday,
+					},
+				},
+			})
+			if (response.errors) {
+				throw new Error(response.errors[0].message)
+			}
+
+			// Sort inmates by createdAt time (newest first)
+			const sortedInmates = [...response.data].sort((a, b) => {
+				const dateA = new Date(a.createdAt || 0).getTime()
+				const dateB = new Date(b.createdAt || 0).getTime()
+				return dateB - dateA // Descending order (newest first)
+			})
+
+			return sortedInmates
+		},
 	})
 
 	// Set initial names from user data
@@ -228,6 +286,45 @@ function MyAccountPage() {
 
 	const handleSaveNames = () => {
 		updateNames(names)
+	}
+
+	// Toggle dropdown
+	const toggleDropdown = () => {
+		setIsDropdownOpen(!isDropdownOpen)
+		// When opening the dropdown, add a click event listener to the document to close it when clicking outside
+		if (!isDropdownOpen) {
+			setTimeout(() => {
+				document.addEventListener('click', handleClickOutside)
+			}, 0)
+		} else {
+			document.removeEventListener('click', handleClickOutside)
+		}
+	}
+
+	// Handle click outside dropdown
+	const dropdownRef = React.useRef<HTMLDivElement>(null)
+	const handleClickOutside = (event: MouseEvent) => {
+		if (
+			dropdownRef.current &&
+			!dropdownRef.current.contains(event.target as Node)
+		) {
+			setIsDropdownOpen(false)
+			document.removeEventListener('click', handleClickOutside)
+		}
+	}
+
+	// Cleanup event listener on unmount
+	React.useEffect(() => {
+		return () => {
+			document.removeEventListener('click', handleClickOutside)
+		}
+	}, [])
+
+	// Select inmate
+	const handleSelectInmate = (inmate: Schema['Inmate']['type']) => {
+		setSelectedInmate(inmate)
+		setIsDropdownOpen(false)
+		document.removeEventListener('click', handleClickOutside)
 	}
 
 	if (isLoading) {
@@ -433,92 +530,187 @@ function MyAccountPage() {
 									</div>
 								</div>
 
-								{/* Test Notification Buttons */}
+								{/* Test Notification Dropdown */}
 								<div className="flex flex-col gap-2 pt-4 border-t border-white/10">
 									<p className="text-sm font-medium text-gray-300">
 										Test Notifications
 									</p>
-									<div className="flex flex-wrap gap-3">
-										<button
-											onClick={async () => {
-												if (!dbUser?.email) return
-												try {
-													await client.mutations.testSendEmail({
-														email: dbUser.email,
-														inmate: {
-															name: 'FirstName LastName',
-															bookingDateTime: new Date().toLocaleString(
-																'en-US',
-																{
-																	month: '2-digit',
-																	day: '2-digit',
-																	year: 'numeric',
-																	hour: '2-digit',
-																	minute: '2-digit',
-																}
-															),
-															charges: ['Test Charge 1', 'Test Charge 2'],
-															mugshotUrl: 'https://robohash.org/inmate.png',
-														},
-													})
-													toast.success('Test email sent successfully')
-												} catch (error) {
-													console.error('Failed to send test email:', error)
-													toast.error('Failed to send test email')
-												}
-											}}
-											disabled={
-												!['EMAIL', 'EMAIL_AND_TEXT'].includes(
-													dbUser?.inmateAlertPreferences?.alertMethod || ''
-												)
-											}
-											className="bg-gradient-to-r from-blue-600/80 to-cyan-600/80 hover:from-blue-600 hover:to-cyan-600 text-white px-4 py-2 rounded text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-										>
-											<Mail className="h-4 w-4" />
-											Test Email
-										</button>
-										{dbUser?.phone && (
-											<button
-												onClick={async () => {
-													try {
-														await client.mutations.testSendMMS({
-															phone: dbUser.phone!,
-															inmate: {
-																name: 'FirstName LastName',
-																bookingDateTime: new Date().toLocaleString(
-																	'en-US',
-																	{
-																		month: '2-digit',
-																		day: '2-digit',
-																		year: 'numeric',
-																		hour: '2-digit',
-																		minute: '2-digit',
-																	}
-																),
-																charges: ['Test Charge 1', 'Test Charge 2'],
-																mugshotUrl: 'https://robohash.org/inmate.png',
-															},
-														})
-														toast.success('Test SMS sent successfully')
-													} catch (error) {
-														console.error('Failed to send test SMS:', error)
-														toast.error('Failed to send test SMS')
+
+									{isLoadingInmates ? (
+										<div className="flex items-center gap-2 text-sm text-gray-400">
+											<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500/50"></div>
+											Loading today&apos;s inmates...
+										</div>
+									) : inmatesError ? (
+										<div className="text-sm text-red-400">
+											Error loading inmates: {(inmatesError as Error).message}
+										</div>
+									) : todayInmates && todayInmates.length > 0 ? (
+										<>
+											<div className="relative" ref={dropdownRef}>
+												<button
+													onClick={(e) => {
+														e.stopPropagation()
+														toggleDropdown()
+													}}
+													className="w-full flex items-center justify-between bg-black/50 border border-white/10 rounded px-4 py-2 text-sm text-gray-300 hover:border-purple-500/50 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
+												>
+													<span>
+														{selectedInmate
+															? selectedInmate.name
+															: 'Select an inmate'}
+													</span>
+													<ChevronDown className="h-4 w-4 ml-2" />
+												</button>
+												{isDropdownOpen && (
+													<div
+														className="fixed inset-0 bg-black/50 z-50 flex justify-center items-start pt-20"
+														onClick={() => setIsDropdownOpen(false)}
+													>
+														<div
+															className="bg-black/90 border border-white/10 rounded shadow-lg overflow-auto w-full max-w-md max-h-[60vh]"
+															onClick={(e) => e.stopPropagation()}
+														>
+															<div className="sticky top-0 bg-purple-900/50 px-4 py-2 border-b border-white/10">
+																<p className="font-medium text-white">
+																	Select an inmate
+																</p>
+															</div>
+															{todayInmates.map((inmate) => (
+																<button
+																	key={inmate.id}
+																	onClick={() => handleSelectInmate(inmate)}
+																	className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-purple-900/20 transition-colors border-b border-white/5"
+																>
+																	{inmate.name}
+																</button>
+															))}
+														</div>
+													</div>
+												)}
+											</div>
+											<div className="flex flex-wrap gap-3 mt-2">
+												<button
+													onClick={async () => {
+														if (!dbUser?.email || !selectedInmate) {
+															toast.error('Please select an inmate first')
+															return
+														}
+														try {
+															setIsSendingEmail(true)
+															await client.mutations.testSendEmail({
+																email: dbUser.email,
+																inmate: {
+																	name: selectedInmate.name,
+																	bookingDateTime:
+																		selectedInmate.bookingDateTime ||
+																		new Date().toLocaleString(),
+																	charges: selectedInmate.charges || [
+																		'No charges',
+																	],
+																	mugshotUrl: selectedInmate.mugshotUrl || '',
+																},
+															})
+															toast.success('Test email sent successfully')
+														} catch (error) {
+															console.error('Failed to send test email:', error)
+															toast.error('Failed to send test email')
+														} finally {
+															setIsSendingEmail(false)
+														}
+													}}
+													disabled={
+														!selectedInmate ||
+														!['EMAIL', 'EMAIL_AND_TEXT'].includes(
+															dbUser?.inmateAlertPreferences?.alertMethod || ''
+														) ||
+														isSendingEmail
 													}
-												}}
-												disabled={
-													!['TEXT', 'EMAIL_AND_TEXT'].includes(
-														dbUser?.inmateAlertPreferences?.alertMethod || ''
-													)
-												}
-												className="bg-gradient-to-r from-green-600/80 to-emerald-600/80 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-											>
-												<Phone className="h-4 w-4" />
-												Test SMS
-											</button>
-										)}
-									</div>
+													className="bg-gradient-to-r from-blue-600/80 to-cyan-600/80 hover:from-blue-600 hover:to-cyan-600 text-white px-4 py-2 rounded text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+												>
+													{isSendingEmail ? (
+														<>
+															<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+															Sending...
+														</>
+													) : (
+														<>
+															<Mail className="h-4 w-4" />
+															Test Email
+														</>
+													)}
+												</button>
+												{dbUser?.phone && (
+													<button
+														onClick={async () => {
+															if (!dbUser?.phone || !selectedInmate) {
+																toast.error('Please select an inmate first')
+																return
+															}
+															try {
+																setIsSendingSMS(true)
+																await client.mutations.testSendMMS({
+																	phone: dbUser.phone!,
+																	inmate: {
+																		name: selectedInmate.name,
+																		bookingDateTime:
+																			selectedInmate.bookingDateTime ||
+																			new Date().toLocaleString(),
+																		charges: selectedInmate.charges || [
+																			'No charges',
+																		],
+																		mugshotUrl: selectedInmate.mugshotUrl || '',
+																	},
+																})
+																toast.success('Test SMS sent successfully')
+															} catch (error) {
+																console.error('Failed to send test SMS:', error)
+																toast.error('Failed to send test SMS')
+															} finally {
+																setIsSendingSMS(false)
+															}
+														}}
+														disabled={
+															!selectedInmate ||
+															!['TEXT', 'EMAIL_AND_TEXT'].includes(
+																dbUser?.inmateAlertPreferences?.alertMethod ||
+																	''
+															) ||
+															isSendingSMS
+														}
+														className="bg-gradient-to-r from-green-600/80 to-emerald-600/80 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+													>
+														{isSendingSMS ? (
+															<>
+																<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+																Sending...
+															</>
+														) : (
+															<>
+																<Phone className="h-4 w-4" />
+																Test SMS
+															</>
+														)}
+													</button>
+												)}
+											</div>
+										</>
+									) : (
+										<div className="text-sm text-gray-400">
+											No inmates found for today. Check back later.
+										</div>
+									)}
 									<p className="text-xs text-gray-500 mt-1">
-										Send a test notification to verify your settings.
+										Send a test notification using{' '}
+										<a
+											href="https://www.scottcountyiowa.us/sheriff/inmates.php?comdate=today"
+											target="_blank"
+											rel="noopener noreferrer"
+											className="text-purple-500 hover:text-purple-600"
+										>
+											today&apos;s inmate data
+										</a>{' '}
+										to verify your settings.
 									</p>
 								</div>
 							</div>

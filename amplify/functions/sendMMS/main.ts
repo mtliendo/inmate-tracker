@@ -10,9 +10,40 @@ export const handler: Handler = async (
 	try {
 		const { phone, inmate } = ctx.arguments
 
+		// Validate mugshot URL before sending
+		let validatedMugshotUrl = inmate.mugshotUrl || ''
+
+		if (validatedMugshotUrl) {
+			try {
+				// Try to fetch the image to see if it exists
+				const imageResponse = await fetch(validatedMugshotUrl, {
+					method: 'HEAD',
+				})
+				if (!imageResponse.ok) {
+					console.log('Mugshot image not available yet, using fallback')
+					validatedMugshotUrl =
+						'https://robohash.org/' +
+						encodeURIComponent(inmate.name) +
+						'?set=set4'
+				}
+			} catch (error) {
+				console.log('Error checking mugshot availability:', error)
+				validatedMugshotUrl =
+					'https://robohash.org/' +
+					encodeURIComponent(inmate.name) +
+					'?set=set4'
+			}
+		}
+
+		// Create a new inmate object with the validated mugshot URL
+		const validatedInmate = {
+			...inmate,
+			mugshotUrl: validatedMugshotUrl,
+		}
+
 		return await sendMMS({
 			phone,
-			inmate,
+			inmate: validatedInmate,
 			twilioConfig: {
 				accountSid: process.env.TWILIO_ACCOUNT_SID!,
 				apiKey: env.TWILIO_API_KEY!,
