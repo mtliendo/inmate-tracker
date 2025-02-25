@@ -467,7 +467,12 @@ function MyAccountPage() {
 													toast.error('Failed to send test email')
 												}
 											}}
-											className="bg-gradient-to-r from-blue-600/80 to-cyan-600/80 hover:from-blue-600 hover:to-cyan-600 text-white px-4 py-2 rounded text-sm flex items-center gap-2"
+											disabled={
+												!['EMAIL', 'EMAIL_AND_TEXT'].includes(
+													dbUser?.inmateAlertPreferences?.alertMethod || ''
+												)
+											}
+											className="bg-gradient-to-r from-blue-600/80 to-cyan-600/80 hover:from-blue-600 hover:to-cyan-600 text-white px-4 py-2 rounded text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
 										>
 											<Mail className="h-4 w-4" />
 											Test Email
@@ -500,7 +505,12 @@ function MyAccountPage() {
 														toast.error('Failed to send test SMS')
 													}
 												}}
-												className="bg-gradient-to-r from-green-600/80 to-emerald-600/80 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded text-sm flex items-center gap-2"
+												disabled={
+													!['TEXT', 'EMAIL_AND_TEXT'].includes(
+														dbUser?.inmateAlertPreferences?.alertMethod || ''
+													)
+												}
+												className="bg-gradient-to-r from-green-600/80 to-emerald-600/80 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
 											>
 												<Phone className="h-4 w-4" />
 												Test SMS

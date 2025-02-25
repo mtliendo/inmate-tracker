@@ -51,7 +51,10 @@ const defaultProps = {
 	mainLinks: [
 		{ href: '/features', label: 'Features' },
 		{ href: '/about', label: 'About' },
-		{ href: '/contact', label: 'Contact' },
+		{
+			href: 'mailto:support@focusotter.com?subject=Inmate%20Alert%20Support',
+			label: 'Contact',
+		},
 	],
 	legalLinks: [
 		{ href: '/privacy', label: 'Privacy Policy' },

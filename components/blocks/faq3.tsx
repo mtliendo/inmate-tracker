@@ -35,13 +35,13 @@ const faqItems = [
 		id: 'faq-2',
 		question: 'What information is included in the alerts?',
 		answer:
-			"Alerts include the inmate's name, booking date/time, charges, and status changes. Professional and Enterprise plans also receive additional filtering options and, for Enterprise users, AI-generated arrest summaries.",
+			"Alerts include the inmate's name, booking date/time, charges, and their mugshot. Note that due to how the data is provided to us, the mugshot may not always be available as it takes time for Scott County to upload the mugshot to their system.",
 	},
 	{
 		id: 'faq-3',
 		question: 'Can I track inmates in other counties?',
 		answer:
-			'Currently, our service is focused on Scott County, Iowa. We plan to expand to other counties in the future. Sign up for our newsletter to stay updated on our expansion plans.',
+			'Currently, our service is focused on Scott County, Iowa. We plan to expand to other counties in the future. We are working with local law enforcement agencies to expand our coverage.',
 	},
 	{
 		id: 'faq-4',
@@ -55,6 +55,12 @@ const faqItems = [
 		answer:
 			'Yes, we take privacy very seriously. Your personal information and tracking list are kept strictly confidential and secured with industry-standard encryption.',
 	},
+	{
+		id: 'faq-6',
+		question: 'What do you mean by real-time alerts?',
+		answer:
+			'Our system checks the Scott County Jail website every 4 minutes for new inmate bookings. When a new booking is found, you will receive an alert via email and/or text message.',
+	},
 ]
 
 const Faq3 = ({
@@ -64,7 +70,7 @@ const Faq3 = ({
 	supportHeading = 'Need Additional Help?',
 	supportDescription = 'Our dedicated support team is available to assist you with any questions about our inmate tracking service.',
 	supportButtonText = 'Contact Support',
-	supportButtonUrl = '/pricing',
+	supportButtonUrl = 'mailto:support@focusotter.com?subject=Inmate%20Alert%20Support',
 }: Faq3Props) => {
 	return (
 		<section className="py-16 md:py-24 lg:py-32">
@@ -106,9 +112,7 @@ const Faq3 = ({
 						className="bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-600 hover:to-pink-600 text-white w-full sm:w-auto"
 						asChild
 					>
-						<a href={supportButtonUrl} target="_blank">
-							{supportButtonText}
-						</a>
+						<a href={supportButtonUrl}>{supportButtonText}</a>
 					</Button>
 				</div>
 			</div>
