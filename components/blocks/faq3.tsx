@@ -25,12 +25,12 @@ interface Faq3Props {
 }
 
 const faqItems = [
-	{
-		id: 'faq-1',
-		question: 'What are the different pricing plans available?',
-		answer:
-			'We offer three plans: Watchful Citizen ($4.99/mo) for individuals tracking up to 10 names, Professional Monitor ($14.99/mo) for businesses tracking up to 25 names with advanced features, and Enterprise Tracker ($29.99/mo) for organizations needing unlimited tracking and AI-powered insights.',
-	},
+	// {
+	// 	id: 'faq-1',
+	// 	question: 'What are the different pricing plans available?',
+	// 	answer:
+	// 		'We offer three plans: Watchful Citizen ($4.99/mo) for individuals tracking up to 10 names, Professional Monitor ($14.99/mo) for businesses tracking up to 25 names with advanced features, and Enterprise Tracker ($29.99/mo) for organizations needing unlimited tracking and AI-powered insights.',
+	// },
 	{
 		id: 'faq-2',
 		question: 'What information is included in the alerts?',

@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Hexagon, Twitter, Github } from 'lucide-react'
+import { Hexagon } from 'lucide-react'
 
 interface FooterProps {
 	logo?: React.ReactNode
@@ -28,7 +28,7 @@ interface FooterProps {
 }
 
 const navLinks = [
-	{ label: 'Features', href: '#features' },
+	// { label: 'Features', href: '#features' },
 	{ label: 'Pricing', href: '#pricing' },
 	{ label: 'FAQ', href: '#faq' },
 ]
@@ -37,16 +37,16 @@ const defaultProps = {
 	logo: <Hexagon className="h-10 w-10" />,
 	brandName: 'Inmate Alerts',
 	socialLinks: [
-		{
-			icon: <Twitter className="h-5 w-5" />,
-			href: 'https://twitter.com',
-			label: 'Twitter',
-		},
-		{
-			icon: <Github className="h-5 w-5" />,
-			href: 'https://github.com',
-			label: 'GitHub',
-		},
+		// {
+		// 	icon: <Twitter className="h-5 w-5" />,
+		// 	href: 'https://twitter.com',
+		// 	label: 'Twitter',
+		// },
+		// {
+		// 	icon: <Github className="h-5 w-5" />,
+		// 	href: 'https://github.com',
+		// 	label: 'GitHub',
+		// },
 	],
 	mainLinks: [
 		{ href: '/features', label: 'Features' },
