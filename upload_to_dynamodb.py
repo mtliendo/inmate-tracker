@@ -1,6 +1,6 @@
 import csv
 import json
-import boto3
+import boto3 # type: ignore
 from datetime import datetime
 
 def parse_charges(charges_str):
