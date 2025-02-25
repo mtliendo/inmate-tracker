@@ -1,5 +1,5 @@
 import { inmateCron } from './functions/inmateCron/resource'
-import { defineBackend, secret } from '@aws-amplify/backend'
+import { defineBackend } from '@aws-amplify/backend'
 import { auth } from './auth/resource'
 import { data } from './data/resource'
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam'
@@ -136,10 +136,7 @@ backend.inmateDDBStream.addEnvironment(
 	'TWILIO_ACCOUNT_SID',
 	process.env.TWILIO_ACCOUNT_SID!
 )
-backend.inmateDDBStream.addEnvironment(
-	'TWILIO_API_KEY',
-	secret('TWILIO_API_KEY')
-)
+
 backend.inmateDDBStream.addEnvironment(
 	'TWILIO_PHONE_NUMBER',
 	process.env.TWILIO_PHONE_NUMBER!
