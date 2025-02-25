@@ -161,34 +161,51 @@ export function Navbar({ links = navLinks }: NavbarProps) {
 								)}
 
 								{/* Auth Links */}
-								{authLinks.map((link) => {
-									const Icon = link.icon
-									return (
-										<SheetClose asChild key={link.label}>
-											<Button
-												variant="ghost"
-												className="justify-start w-full gap-2"
-												onClick={link.onClick}
-												asChild={!link.onClick}
+								{!user?.username ? (
+									<SheetClose asChild>
+										<Button
+											variant="ghost"
+											className="justify-start w-full gap-2"
+											asChild
+										>
+											<Link
+												href="/my-account"
+												className="flex items-center gap-2"
 											>
-												{link.onClick ? (
-													<span className="flex items-center gap-2">
-														<Icon className="h-4 w-4" />
-														{link.label}
-													</span>
-												) : (
-													<Link
-														href={link.href}
-														className="flex items-center gap-2"
-													>
-														<Icon className="h-4 w-4" />
-														{link.label}
-													</Link>
-												)}
-											</Button>
-										</SheetClose>
-									)
-								})}
+												Login
+											</Link>
+										</Button>
+									</SheetClose>
+								) : (
+									authLinks.map((link) => {
+										const Icon = link.icon
+										return (
+											<SheetClose asChild key={link.label}>
+												<Button
+													variant="ghost"
+													className="justify-start w-full gap-2"
+													onClick={link.onClick}
+													asChild={!link.onClick}
+												>
+													{link.onClick ? (
+														<span className="flex items-center gap-2">
+															<Icon className="h-4 w-4" />
+															{link.label}
+														</span>
+													) : (
+														<Link
+															href={link.href}
+															className="flex items-center gap-2"
+														>
+															<Icon className="h-4 w-4" />
+															{link.label}
+														</Link>
+													)}
+												</Button>
+											</SheetClose>
+										)
+									})
+								)}
 							</nav>
 						</SheetContent>
 					</Sheet>
