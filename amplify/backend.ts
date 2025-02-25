@@ -21,7 +21,7 @@ import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets'
 import { ebSubscriptionEvents } from './functions/ebSubscriptionEvents/resource'
 import { sendMMS } from './functions/sendMMS/resource'
 import { sendEmail } from './functions/sendEmail/resource'
-
+import { createStripeCustomerBillingSession } from './functions/createStripeCustomerBillingSession/resource'
 config({ path: '.env.local', override: false })
 const currentBranch = branchName() || process.env.AWS_BRANCH
 
@@ -35,6 +35,7 @@ const backend = defineBackend({
 	ebSubscriptionEvents,
 	sendMMS,
 	sendEmail,
+	createStripeCustomerBillingSession,
 })
 
 const { cfnUserPool } = backend.auth.resources.cfnResources
