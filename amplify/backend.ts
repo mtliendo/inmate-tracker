@@ -97,7 +97,7 @@ emailQueue.grantConsumeMessages(backend.inmateQueuePoller.resources.lambda)
 //* add the lambda functions as a target to the queue
 new EventSourceMapping(
 	Stack.of(backend.data),
-	'InmateEmailNotificationQueueEventSourceMapping',
+	`InmateEmailNotificationQueueEventSourceMapping-${currentBranch}`,
 	{
 		target: backend.inmateQueuePoller.resources.lambda,
 		eventSourceArn: emailQueue.queueArn,
@@ -125,12 +125,16 @@ backend.inmateDDBStream.resources.lambda.addToRolePolicy(
 	})
 )
 
-new EventSourceMapping(Stack.of(backend.data), 'InmateDDBStreamMapping', {
-	target: backend.inmateDDBStream.resources.lambda,
-	eventSourceArn: inmatesTable.tableStreamArn,
-	startingPosition: StartingPosition.LATEST,
-	retryAttempts: 2,
-})
+new EventSourceMapping(
+	Stack.of(backend.data),
+	`InmateDDBStreamMapping-${currentBranch}`,
+	{
+		target: backend.inmateDDBStream.resources.lambda,
+		eventSourceArn: inmatesTable.tableStreamArn,
+		startingPosition: StartingPosition.LATEST,
+		retryAttempts: 2,
+	}
+)
 
 backend.inmateDDBStream.addEnvironment(
 	'TWILIO_ACCOUNT_SID',
@@ -156,18 +160,18 @@ const stripeEventBus = EventBus.fromEventBusArn(
 //create a new cloudwatch log group and Rule for stripe SUBSCRIPTION events
 const stripeSubscriptionEventsLogGroup = new LogGroup(
 	customResourcesStack,
-	'inmateAlertsStripeSubscriptionEventsLogGroup',
+	`inmateAlertsStripeSubscriptionEventsLogGroup-${currentBranch}`,
 	{
-		logGroupName: '/aws/events/inmateAlerts-stripeSubscriptionEventsLogGroup',
+		logGroupName: `/aws/events/inmateAlerts-stripeSubscriptionEventsLogGroup-${currentBranch}`,
 		retention: RetentionDays.ONE_MONTH,
 	}
 )
 
 new Rule(
 	customResourcesStack,
-	'inmateAlertsStripeEventBridgeSubscriptionRule',
+	`inmateAlertsStripeEventBridgeSubscriptionRule-${currentBranch}`,
 	{
-		ruleName: 'inmateAlerts-stripe-subscription-events-rule',
+		ruleName: `inmateAlerts-stripe-subscription-events-rule-${currentBranch}`,
 		eventBus: stripeEventBus,
 		targets: [
 			new LambdaFunction(backend.ebSubscriptionEvents.resources.lambda),
