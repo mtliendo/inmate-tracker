@@ -38,7 +38,10 @@ const backend = defineBackend({
 	createStripeCustomerBillingSession,
 })
 
+backend.data.resources.cfnResources.cfnGraphqlApi.name = `inmateAlertsGraphqlApi-${currentBranch}`
+
 const { cfnUserPool } = backend.auth.resources.cfnResources
+cfnUserPool.userPoolName = `inmateAlertsUserPool-${currentBranch}`
 //* Loosen up the default password policy
 cfnUserPool.policies = {
 	passwordPolicy: {
