@@ -318,6 +318,7 @@ function MyAccountPage() {
 		return () => {
 			document.removeEventListener('click', handleClickOutside)
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
 	// Select inmate
