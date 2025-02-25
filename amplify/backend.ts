@@ -114,7 +114,7 @@ new EventSourceMapping(
 )
 
 //* Don't allow the lambda to scale up past 1
-backend.inmateQueuePoller.resources.cfnResources.cfnFunction.reservedConcurrentExecutions = 1
+// backend.inmateQueuePoller.resources.cfnResources.cfnFunction.reservedConcurrentExecutions = 1
 
 //*--------end of SQS Queue Setup------
 
