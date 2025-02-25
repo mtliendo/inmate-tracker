@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import ClientLayout from './layout-client'
 
 export const metadata: Metadata = {
-	title: 'Inmate Tracker',
+	title: 'Scott CountyInmate Tracker',
 	description: 'Track and manage inmate information',
 	icons: {
 		icon: [{ url: '/favicon.ico' }, { url: '/icon.png', type: 'image/png' }],
