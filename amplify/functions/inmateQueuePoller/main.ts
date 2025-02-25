@@ -101,7 +101,7 @@ export const handler: SQSHandler = async (event) => {
 		const message = JSON.parse(record.body)
 		console.log('Message:', message)
 		await resend.emails.send({
-			from: `Inmate Alerts <${env.RESEND_FROM_EMAIL}>`,
+			from: `Inmate Alerts <alerts@${env.RESEND_FROM_EMAIL}>`,
 			to: [message.email],
 			subject: `Inmate Alert: ${message.inmate.name}`,
 			html: generateEmailHTML(message.inmate),
