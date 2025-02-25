@@ -49,8 +49,8 @@ const defaultProps = {
 		// },
 	],
 	mainLinks: [
-		{ href: '/features', label: 'Features' },
-		{ href: '/about', label: 'About' },
+		// { href: '/features', label: 'Features' },
+		// { href: '/about', label: 'About' },
 		{
 			href: 'mailto:support@focusotter.com?subject=Inmate%20Alert%20Support',
 			label: 'Contact',
@@ -61,7 +61,7 @@ const defaultProps = {
 		{ href: '/terms', label: 'Terms of Service' },
 	],
 	copyright: {
-		text: '© 2024 Inmate Alerts',
+		text: `© 2024 - ${new Date().getFullYear()} Inmate Alerts`,
 		license: 'All rights reserved',
 	},
 }
