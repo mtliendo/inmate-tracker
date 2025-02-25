@@ -63,6 +63,10 @@ backend.sendMMS.addEnvironment(
 	'TWILIO_ACCOUNT_SID',
 	process.env.TWILIO_ACCOUNT_SID!
 )
+backend.inmateQueuePoller.addEnvironment(
+	'RESEND_FROM_EMAIL',
+	process.env.RESEND_FROM_EMAIL!
+)
 
 const customResourcesStack = backend.createStack(
 	`InmateAlertsCustomResourcesStack-${currentBranch}`
