@@ -12,9 +12,7 @@ const amplifyClient = generateClient<Schema>()
 
 import Stripe from 'stripe'
 
-const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-	apiVersion: '2025-01-27.acacia',
-})
+const stripe = new Stripe(env.STRIPE_SECRET_KEY)
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const handler: Handler = async (event: any) => {
